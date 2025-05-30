@@ -30,6 +30,7 @@ function App() {
             <Route path="register" element={<RegisterPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="chef/dashboard" element={<ChefDashboardPage />} />
+
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>

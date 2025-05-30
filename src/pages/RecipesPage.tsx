@@ -19,6 +19,14 @@ interface Recipe {
   status: string;
 }
 
+export interface Chef {
+  id: string;
+  full_name: string;
+  avatar_url?: string;
+  bio?: string;
+}
+
+
 const RecipesPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const tagParam = searchParams.get('tag');
@@ -85,9 +93,13 @@ const RecipesPage: React.FC = () => {
       );
     }
 
-    if (servings) {
-      filteredRecipes = filteredRecipes.filter(recipe => recipe.servings === servings);
-    }
+    // if (servings) {
+    //   filteredRecipes = filteredRecipes.filter(recipe => recipe.servings === servings);
+    // }
+    if (servings !== null && !isNaN(servings)) {
+  filteredRecipes = filteredRecipes.filter(recipe => recipe.servings === Number(servings));
+}
+
 
     return filteredRecipes;
   };

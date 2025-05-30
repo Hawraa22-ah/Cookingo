@@ -8,6 +8,9 @@ import RecipeGrid from '../components/recipes/RecipeGrid';
 import CartSection from '../components/cart/CartSection';
 import OrdersSection from '../components/profile/OrdersSection';
 
+
+
+
 const ProfilePage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -117,7 +120,7 @@ const ProfilePage: React.FC = () => {
                 <p className="text-gray-600">{user?.email}</p>
                 {profile?.role === 'chef' && (
   <button
-    onClick={() => navigate('/chef-dashboard')}
+    onClick={() => navigate('/chef/dashboard')}
     className="mt-4 inline-block bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition"
   >
     🧑‍🍳 Go to Chef Dashboard
@@ -205,5 +208,6 @@ const ProfilePage: React.FC = () => {
     </div>
   );
 };
+
 
 export default ProfilePage;

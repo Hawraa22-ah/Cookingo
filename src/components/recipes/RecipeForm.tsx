@@ -45,12 +45,12 @@ const RecipeForm: React.FC<RecipeFormProps> = ({
         chef_id: user.id
       };
 
+          console.log('Submitting recipe data:', recipeData);
+
+
       const { data, error } = await supabase
         .from('recipes')
-        // .upsert([{
-        //   id: initialData?.id,
-        //   ...recipeData
-        // }])
+        
         .upsert([
           initialData?.id
             ? { id: initialData.id, ...recipeData } // update

@@ -1,4 +1,3 @@
-// src/components/dishes/DishForm.tsx
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
@@ -13,7 +12,16 @@ const DishForm: React.FC<DishFormProps> = ({ onSubmit, onCancel }) => {
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState<number>(0);
   const [image, setImage] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImage(file);
+    setImagePreviewUrl(URL.createObjectURL(file));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,40 +29,50 @@ const DishForm: React.FC<DishFormProps> = ({ onSubmit, onCancel }) => {
 
     try {
       let imageUrl = '';
+      let imagePath = '';
 
-      // Upload image
+      // Upload image to Supabase Storage
       if (image) {
-        const fileExt = image.name.split('.').pop();
-        const filePath = `dishes/${Date.now()}.${fileExt}`;
+        const ext = image.name.split('.').pop();
+        const fileName = `${Date.now()}.${ext}`;
+        imagePath = `dishes/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('public') // adjust this if your bucket is named differently
-          .upload(filePath, image);
+        const { error: uploadError } = await supabase
+          .storage
+          .from('dish-images')
+          .upload(imagePath, image);
 
         if (uploadError) throw uploadError;
 
-        const { data } = supabase.storage.from('public').getPublicUrl(filePath);
-        imageUrl = data.publicUrl;
+        const { data: publicData } = supabase
+          .storage
+          .from('dish-images')
+          .getPublicUrl(imagePath);
+
+        imageUrl = publicData.publicUrl;
       }
 
       const { data: userData } = await supabase.auth.getUser();
       const user = userData?.user;
 
-      const { error } = await supabase.from('dishes').insert({
-        title,
-        description,
-        price,
-        image_url: imageUrl,
-        chef_id: user?.id,
-        status: 'published',
-      });
+      const { error: insertError } = await supabase
+        .from('dishes')
+        .insert({
+          title,
+          description,
+          price,
+          image_url: imageUrl,
+          image_path: imagePath,
+          chef_id: user?.id,
+          status: 'published',
+        });
 
-      if (error) throw error;
+      if (insertError) throw insertError;
 
       toast.success('Dish created!');
       onSubmit();
     } catch (err: any) {
-      console.error(err);
+      console.error('Error creating dish:', err);
       toast.error(err.message || 'Failed to create dish');
     } finally {
       setLoading(false);
@@ -100,8 +118,15 @@ const DishForm: React.FC<DishFormProps> = ({ onSubmit, onCancel }) => {
         <input
           type="file"
           accept="image/*"
-          onChange={(e) => setImage(e.target.files?.[0] || null)}
+          onChange={handleFileChange}
         />
+        {imagePreviewUrl && (
+          <img
+            src={imagePreviewUrl}
+            alt="Preview"
+            className="mt-3 h-40 w-auto rounded shadow"
+          />
+        )}
       </div>
 
       <div className="flex justify-end space-x-4">

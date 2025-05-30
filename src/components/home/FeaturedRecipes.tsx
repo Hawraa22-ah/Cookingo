@@ -16,7 +16,7 @@ const FeaturedRecipes: React.FC<FeaturedRecipesProps> = ({ recipes }) => {
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-10">
-          <h2 className="text-3xl font-bold font-serif text-gray-800">Featured Recipes</h2>
+          <h2 className="text-3xl font-bold font-serif text-gray-800">Some Recipes</h2>
           <Link 
             to="/recipes" 
             className="flex items-center text-orange-500 hover:text-orange-600 font-medium transition-colors"

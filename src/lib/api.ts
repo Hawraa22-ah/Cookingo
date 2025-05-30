@@ -198,22 +198,19 @@ export const toggleFavorite = async (recipeId: string): Promise<boolean> => {
     }
 
     // Ensure user profile exists
-    const { data: userProfile, error: profileError } = await supabase
+    const { data: userProfile } = await supabase
       .from('user_profiles')
       .select('id, username')
       .eq('id', user.id)
       .maybeSingle();
 
     if (!userProfile) {
-      // Create user profile if it doesn't exist
-      const { data: newProfile, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('user_profiles')
         .insert([{
           id: user.id,
           username: user.email?.split('@')[0] || `user_${user.id.substring(0, 8)}`,
-        }])
-        .select()
-        .single();
+        }]);
 
       if (insertError) throw insertError;
     }
@@ -227,25 +224,26 @@ export const toggleFavorite = async (recipeId: string): Promise<boolean> => {
       .maybeSingle();
 
     if (existingFavorite) {
-      // Delete existing favorite
-      const { error } = await supabase
+      const { error: deleteError } = await supabase
         .from('favorites')
         .delete()
         .eq('id', existingFavorite.id);
 
-      if (error) throw error;
+      if (deleteError) throw deleteError;
       return false;
     } else {
-      // Create new favorite
-      const { error } = await supabase
-        .from('favorites')
-        .insert([{
-          user_id: user.id,
-          recipe_id: recipe ? recipeId : null,
-          dish_id: dish ? recipeId : null
-        }]);
+      // Use spread syntax to include only one of recipe_id or dish_id
+      const insertPayload = {
+        user_id: user.id,
+        ...(recipe && { recipe_id: recipeId }),
+        ...(dish && { dish_id: recipeId })
+      };
 
-      if (error) throw error;
+      const { error: insertError } = await supabase
+        .from('favorites')
+        .insert([insertPayload]);
+
+      if (insertError) throw insertError;
       return true;
     }
   } catch (error) {

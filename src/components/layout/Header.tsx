@@ -41,6 +41,7 @@ const Header: React.FC = () => {
     checkChefStatus();
   }, []);
 
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
