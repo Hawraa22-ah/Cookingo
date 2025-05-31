@@ -55,7 +55,6 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
           </div>
           <div className="flex items-center">
             <ChefHat size={16} className="mr-1" />
-            <span>Medium</span>
           </div>
         </div>
       </div>

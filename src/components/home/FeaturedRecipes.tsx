@@ -4,6 +4,7 @@ import { ChevronRight } from 'lucide-react';
 import { Recipe } from '../../types';
 import RecipeCard from '../recipes/RecipeCard';
 
+
 interface FeaturedRecipesProps {
   recipes: Recipe[];
 }

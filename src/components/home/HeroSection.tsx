@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Search, ArrowRight } from 'lucide-react';
 
+
 const HeroSection: React.FC = () => {
   return (
     <div className="relative bg-cover bg-center h-[80vh] flex items-center" 

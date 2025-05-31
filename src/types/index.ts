@@ -10,6 +10,12 @@ export interface Recipe {
   tags: string[];
   views: number;
   likes: number;
+  ratings?: Rating[];
+  userRating?: number;
+  isFavorite?: boolean;
+  servings?: number;
+  difficulty?: string;
+
 }
 
 export interface Dish {
