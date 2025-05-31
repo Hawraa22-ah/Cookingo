@@ -74,6 +74,15 @@ const Header: React.FC = () => {
             }`}>
               Daily Dishes
             </Link>
+
+            <Link
+  to="/products"
+  className="text-gray-700 hover:text-orange-500 transition font-medium"
+>
+  Products
+</Link>
+
+
             {isChef && (
               <Link to="/chef/dashboard" className={`text-lg font-medium hover:text-orange-500 transition-colors ${
                 location.pathname.includes('/chef/dashboard') ? 'text-orange-500' : 'text-gray-700'

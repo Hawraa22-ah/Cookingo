@@ -11,6 +11,8 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { signIn } = useAuth();
 
+  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');

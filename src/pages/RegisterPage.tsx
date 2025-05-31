@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChefHat, User } from 'lucide-react';
+import { ChefHat, User, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 
+
 const RegisterPage: React.FC = () => {
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -100,6 +102,29 @@ const RegisterPage: React.FC = () => {
                 Browse and save recipes
               </p>
             </button>
+
+            <button
+  type="button"
+  onClick={() => setRole('seller')}
+  className={`p-4 rounded-lg border-2 transition-colors ${
+    role === 'seller'
+      ? 'border-orange-500 bg-orange-50'
+      : 'border-gray-200 hover:border-orange-200'
+  }`}
+>
+  <ShoppingCart className={`w-8 h-8 mx-auto mb-2 ${
+    role === 'seller' ? 'text-orange-500' : 'text-gray-400'
+  }`} />
+  <div className={`font-medium ${
+    role === 'seller' ? 'text-orange-500' : 'text-gray-500'
+  }`}>
+    Seller
+  </div>
+  <p className="text-sm text-gray-500 mt-1">
+    Sell products and manage sales
+  </p>
+</button>
+            
 
             <button
               type="button"

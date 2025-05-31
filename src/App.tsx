@@ -13,6 +13,10 @@ import ProfilePage from './pages/ProfilePage';
 import ChefDashboardPage from './pages/ChefDashboardPage';
 import NotFoundPage from './pages/NotFoundPage';
 import { AuthProvider } from './contexts/AuthContext';
+import SellerDashboard from './pages/seller/SellerDashboard';
+import ProductsPage from './pages/ProductsPage';
+
+
 
 function App() {
   return (
@@ -30,6 +34,8 @@ function App() {
             <Route path="register" element={<RegisterPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="chef/dashboard" element={<ChefDashboardPage />} />
+            <Route path="seller/dashboard" element={<SellerDashboard />} />
+            <Route path="/products" element={<ProductsPage />} />
 
             <Route path="*" element={<NotFoundPage />} />
           </Route>
