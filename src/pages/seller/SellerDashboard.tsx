@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from "../../lib/supabase";
 import { useNavigate } from 'react-router-dom';
 
+
+
 export default function SellerDashboard() {
   const [username, setUsername] = useState('');
   const [userId, setUserId] = useState('');

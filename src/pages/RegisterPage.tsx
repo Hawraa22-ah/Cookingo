@@ -1,16 +1,15 @@
 // import React, { useState } from 'react';
 // import { Link, useNavigate } from 'react-router-dom';
-// import { ChefHat, User, ShoppingCart } from 'lucide-react';
+// import { ChefHat, User, ShoppingCart, Mail, Lock } from 'lucide-react';
 // import { useAuth } from '../contexts/AuthContext';
 
-
-
 // const RegisterPage: React.FC = () => {
-//   const [username, setUsername] = useState('');
+//   const [firstName, setFirstName] = useState('');
+//   const [lastName, setLastName] = useState('');
 //   const [email, setEmail] = useState('');
 //   const [password, setPassword] = useState('');
 //   const [confirmPassword, setConfirmPassword] = useState('');
-//   const [role, setRole] = useState<'user' | 'chef'>('user');
+//   const [role, setRole] = useState<'user' | 'chef' | 'seller'>('user');
 //   const [error, setError] = useState('');
 //   const [loading, setLoading] = useState(false);
 //   const navigate = useNavigate();
@@ -31,14 +30,15 @@
 //     }
 
 //     setLoading(true);
-    
+
 //     try {
-//       const { error: signUpError } = await signUp(email, password, role);
-      
+//       const fullName = `${firstName} ${lastName}`.trim();
+
+//       const { error: signUpError } = await signUp(email, password, role, fullName);
+
 //       if (signUpError) {
-//         if (signUpError.message.includes('User already registered') || 
-//             signUpError.message.includes('user_already_exists')) {
-//           throw new Error('This email is already registered. Please log in or use a different email.');
+//         if (signUpError.message.includes('user_already_exists')) {
+//           throw new Error('This email is already registered.');
 //         }
 //         throw signUpError;
 //       }
@@ -48,7 +48,7 @@
 //       if (err instanceof Error) {
 //         setError(err.message);
 //       } else {
-//         setError('Failed to create an account. Please try again.');
+//         setError('Failed to create an account.');
 //       }
 //     } finally {
 //       setLoading(false);
@@ -56,23 +56,29 @@
 //   };
 
 //   return (
-//     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-//       <div className="max-w-md w-full space-y-8">
-//         <div className="text-center">
-//           <Link to="/" className="flex items-center justify-center space-x-2">
-//             <ChefHat size={32} className="text-orange-500" />
-//             <span className="text-3xl font-bold font-serif text-gray-800">Cookingo</span>
-//           </Link>
-//           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Create your account</h2>
-//           <p className="mt-2 text-sm text-gray-600">
-//             Or{' '}
-//             <Link to="/login" className="font-medium text-orange-500 hover:text-orange-400">
-//               sign in to your account
+//     <div
+//       className="bg-cover bg-center min-h-screen"
+//       style={{
+//         backgroundImage:
+//           "url('https://images.pexels.com/photos/1640773/pexels-photo-1640773.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')",
+//       }}
+//     >
+//       <div className="min-h-screen flex items-center justify-center bg-white/80 py-12 px-4 sm:px-6 lg:px-8">
+//         <div className="max-w-md w-full space-y-6">
+//           <div className="text-center">
+//             <Link to="/" className="flex items-center justify-center space-x-2">
+//               <ChefHat size={32} className="text-orange-500" />
+//               <span className="text-3xl font-bold font-serif text-gray-900">Cookingo</span>
 //             </Link>
-//           </p>
-//         </div>
-        
-//         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+//             <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Create your account</h2>
+//             <p className="mt-2 text-sm text-gray-800">
+//               Or{' '}
+//               <Link to="/login" className="font-medium text-orange-500 hover:text-orange-400">
+//                 sign in to your account
+//               </Link>
+//             </p>
+//           </div>
+
 //           {error && (
 //             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
 //               {error}
@@ -80,138 +86,135 @@
 //           )}
 
 //           {/* Role Selection */}
-//           <div className="grid grid-cols-2 gap-4">
-//             <button
-//               type="button"
-//               onClick={() => setRole('user')}
-//               className={`p-4 rounded-lg border-2 transition-colors ${
-//                 role === 'user'
-//                   ? 'border-orange-500 bg-orange-50'
-//                   : 'border-gray-200 hover:border-orange-200'
-//               }`}
-//             >
-//               <User className={`w-8 h-8 mx-auto mb-2 ${
-//                 role === 'user' ? 'text-orange-500' : 'text-gray-400'
-//               }`} />
-//               <div className={`font-medium ${
-//                 role === 'user' ? 'text-orange-500' : 'text-gray-500'
-//               }`}>
-//                 Regular User
-//               </div>
-//               <p className="text-sm text-gray-500 mt-1">
-//                 Browse and save recipes
-//               </p>
-//             </button>
-
-//             <button
-//   type="button"
-//   onClick={() => setRole('seller')}
-//   className={`p-4 rounded-lg border-2 transition-colors ${
-//     role === 'seller'
-//       ? 'border-orange-500 bg-orange-50'
-//       : 'border-gray-200 hover:border-orange-200'
-//   }`}
-// >
-//   <ShoppingCart className={`w-8 h-8 mx-auto mb-2 ${
-//     role === 'seller' ? 'text-orange-500' : 'text-gray-400'
-//   }`} />
-//   <div className={`font-medium ${
-//     role === 'seller' ? 'text-orange-500' : 'text-gray-500'
-//   }`}>
-//     Seller
-//   </div>
-//   <p className="text-sm text-gray-500 mt-1">
-//     Sell products and manage sales
-//   </p>
-// </button>
-            
-
-//             <button
-//               type="button"
-//               onClick={() => setRole('chef')}
-//               className={`p-4 rounded-lg border-2 transition-colors ${
-//                 role === 'chef'
-//                   ? 'border-orange-500 bg-orange-50'
-//                   : 'border-gray-200 hover:border-orange-200'
-//               }`}
-//             >
-//               <ChefHat className={`w-8 h-8 mx-auto mb-2 ${
-//                 role === 'chef' ? 'text-orange-500' : 'text-gray-400'
-//               }`} />
-//               <div className={`font-medium ${
-//                 role === 'chef' ? 'text-orange-500' : 'text-gray-500'
-//               }`}>
-//                 Chef
-//               </div>
-//               <p className="text-sm text-gray-500 mt-1">
-//                 Create and share recipes
-//               </p>
-//             </button>
-//           </div>
-          
-//           <div className="rounded-md shadow-sm space-y-4">
-//             <div>
-//               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-//                 Email address
-//               </label>
-//               <input
-//                 id="email"
-//                 name="email"
-//                 type="email"
-//                 autoComplete="email"
-//                 required
-//                 value={email}
-//                 onChange={(e) => setEmail(e.target.value)}
-//                 className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-//               />
-//             </div>
-            
-//             <div>
-//               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-//                 Password
-//               </label>
-//               <input
-//                 id="password"
-//                 name="password"
-//                 type="password"
-//                 autoComplete="new-password"
-//                 required
-//                 value={password}
-//                 onChange={(e) => setPassword(e.target.value)}
-//                 className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-//               />
-//               <p className="mt-1 text-sm text-gray-500">
-//                 Must be at least 6 characters long
-//               </p>
-//             </div>
-
-//             <div>
-//               <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700">
-//                 Confirm password
-//               </label>
-//               <input
-//                 id="confirm-password"
-//                 name="confirm-password"
-//                 type="password"
-//                 autoComplete="new-password"
-//                 required
-//                 value={confirmPassword}
-//                 onChange={(e) => setConfirmPassword(e.target.value)}
-//                 className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-//               />
-//             </div>
+//           <div className="flex flex-wrap justify-center gap-4">
+//             {[
+//               {
+//                 roleType: 'user',
+//                 icon: <User className="w-8 h-8 mb-2" />,
+//                 label: 'Regular User',
+//                 description: 'Browse and save recipes',
+//               },
+//               {
+//                 roleType: 'seller',
+//                 icon: <ShoppingCart className="w-8 h-8 mb-2" />,
+//                 label: 'Seller',
+//                 description: 'Sell products and manage sales',
+//               },
+//               {
+//                 roleType: 'chef',
+//                 icon: <ChefHat className="w-8 h-8 mb-2" />,
+//                 label: 'Chef',
+//                 description: 'Create and share recipes',
+//               },
+//             ].map(({ roleType, icon, label, description }) => (
+//               <button
+//                 key={roleType}
+//                 type="button"
+//                 onClick={() => setRole(roleType as 'user' | 'chef' | 'seller')}
+//                 className={`w-[110px] sm:w-[150px] p-4 rounded-lg border-2 transition-colors text-black ${
+//                   role === roleType
+//                     ? 'border-orange-500 bg-orange-50'
+//                     : 'border-gray-200 hover:border-orange-200'
+//                 }`}
+//               >
+//                 <div className="flex flex-col items-center text-center">
+//                   {icon}
+//                   <div className={`font-semibold ${role === roleType ? 'text-orange-500' : 'text-gray-900'}`}>
+//                     {label}
+//                   </div>
+//                   <p className="text-xs text-gray-800">{description}</p>
+//                 </div>
+//               </button>
+//             ))}
 //           </div>
 
-//           <div>
+//           {/* Form Fields */}
+//           <form className="space-y-4" onSubmit={handleSubmit}>
+//             <div>
+//               <label className="block text-sm font-medium text-gray-900">First Name</label>
+//               <div className="mt-1 flex items-center border rounded-md shadow-sm px-3 py-2 focus-within:ring-2 focus-within:ring-orange-500">
+//                 <User className="w-5 h-5 text-gray-400 mr-2" />
+//                 <input
+//                   type="text"
+//                   required
+//                   value={firstName}
+//                   onChange={(e) => setFirstName(e.target.value)}
+//                   className="w-full focus:outline-none"
+//                   placeholder="Enter your first name"
+//                 />
+//               </div>
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium text-gray-900">Last Name</label>
+//               <div className="mt-1 flex items-center border rounded-md shadow-sm px-3 py-2 focus-within:ring-2 focus-within:ring-orange-500">
+//                 <User className="w-5 h-5 text-gray-400 mr-2" />
+//                 <input
+//                   type="text"
+//                   required
+//                   value={lastName}
+//                   onChange={(e) => setLastName(e.target.value)}
+//                   className="w-full focus:outline-none"
+//                   placeholder="Enter your last name"
+//                 />
+//               </div>
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium text-gray-900">Email</label>
+//               <div className="mt-1 flex items-center border rounded-md shadow-sm px-3 py-2 focus-within:ring-2 focus-within:ring-orange-500">
+//                 <Mail className="w-5 h-5 text-gray-400 mr-2" />
+//                 <input
+//                   type="email"
+//                   required
+//                   value={email}
+//                   onChange={(e) => setEmail(e.target.value)}
+//                   className="w-full focus:outline-none"
+//                   placeholder="Enter your email"
+//                 />
+//               </div>
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium text-gray-900">Password</label>
+//               <div className="mt-1 flex items-center border rounded-md shadow-sm px-3 py-2 focus-within:ring-2 focus-within:ring-orange-500">
+//                 <Lock className="w-5 h-5 text-gray-400 mr-2" />
+//                 <input
+//                   type="password"
+//                   required
+//                   value={password}
+//                   onChange={(e) => setPassword(e.target.value)}
+//                   className="w-full focus:outline-none"
+//                   placeholder="Enter your password"
+//                 />
+//               </div>
+//               <p className="mt-1 text-sm text-gray-800">Must be at least 6 characters long</p>
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium text-gray-900">Confirm Password</label>
+//               <div className="mt-1 flex items-center border rounded-md shadow-sm px-3 py-2 focus-within:ring-2 focus-within:ring-orange-500">
+//                 <Lock className="w-5 h-5 text-gray-400 mr-2" />
+//                 <input
+//                   type="password"
+//                   required
+//                   value={confirmPassword}
+//                   onChange={(e) => setConfirmPassword(e.target.value)}
+//                   className="w-full focus:outline-none"
+//                   placeholder="Confirm your password"
+//                 />
+//               </div>
+//             </div>
+
 //             <button
 //               type="submit"
 //               disabled={loading}
-//               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
+//               className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
 //             >
 //               {loading ? 'Creating account...' : 'Create account'}
 //             </button>
-//           </div>
-//         </form>
+//           </form>
+//         </div>
 //       </div>
 //     </div>
 //   );
@@ -221,7 +224,7 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChefHat, User, ShoppingCart } from 'lucide-react';
+import { ChefHat, User, ShoppingCart, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const RegisterPage: React.FC = () => {
@@ -253,12 +256,12 @@ const RegisterPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const { error: signUpError } = await signUp(email, password, role, `${firstName} ${lastName}`);
+      const fullName = `${firstName} ${lastName}`.trim();
+      const { error: signUpError } = await signUp(email, password, role, fullName);
 
       if (signUpError) {
-        if (signUpError.message.includes('User already registered') || 
-            signUpError.message.includes('user_already_exists')) {
-          throw new Error('This email is already registered. Please log in or use a different email.');
+        if (signUpError.message.includes('user_already_exists')) {
+          throw new Error('This email is already registered.');
         }
         throw signUpError;
       }
@@ -268,7 +271,7 @@ const RegisterPage: React.FC = () => {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError('Failed to create an account. Please try again.');
+        setError('Failed to create an account.');
       }
     } finally {
       setLoading(false);
@@ -276,23 +279,29 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <Link to="/" className="flex items-center justify-center space-x-2">
-            <ChefHat size={32} className="text-orange-500" />
-            <span className="text-3xl font-bold font-serif text-gray-800">Cookingo</span>
-          </Link>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Create your account</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Or{' '}
-            <Link to="/login" className="font-medium text-orange-500 hover:text-orange-400">
-              sign in to your account
+    <div
+      className="bg-cover bg-center min-h-screen"
+      style={{
+        backgroundImage:
+          "url('https://images.pexels.com/photos/1640773/pexels-photo-1640773.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')",
+      }}
+    >
+      <div className="min-h-screen flex items-center justify-center bg-white/80 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-6">
+          <div className="text-center">
+            <Link to="/" className="flex items-center justify-center space-x-2">
+              <ChefHat size={32} className="text-orange-500" />
+              <span className="text-3xl font-bold font-serif text-gray-900">Cookingo</span>
             </Link>
-          </p>
-        </div>
+            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Create your account</h2>
+            <p className="mt-2 text-sm text-gray-800">
+              Or{' '}
+              <Link to="/login" className="font-medium text-orange-500 hover:text-orange-400">
+                sign in to your account
+              </Link>
+            </p>
+          </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
               {error}
@@ -300,169 +309,139 @@ const RegisterPage: React.FC = () => {
           )}
 
           {/* Role Selection */}
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              type="button"
-              onClick={() => setRole('user')}
-              className={`p-4 rounded-lg border-2 transition-colors ${
-                role === 'user'
-                  ? 'border-orange-500 bg-orange-50'
-                  : 'border-gray-200 hover:border-orange-200'
-              }`}
-            >
-              <User className={`w-8 h-8 mx-auto mb-2 ${
-                role === 'user' ? 'text-orange-500' : 'text-gray-400'
-              }`} />
-              <div className={`font-medium ${
-                role === 'user' ? 'text-orange-500' : 'text-gray-500'
-              }`}>
-                Regular User
-              </div>
-              <p className="text-sm text-gray-500 mt-1">
-                Browse and save recipes
-              </p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setRole('seller')}
-              className={`p-4 rounded-lg border-2 transition-colors ${
-                role === 'seller'
-                  ? 'border-orange-500 bg-orange-50'
-                  : 'border-gray-200 hover:border-orange-200'
-              }`}
-            >
-              <ShoppingCart className={`w-8 h-8 mx-auto mb-2 ${
-                role === 'seller' ? 'text-orange-500' : 'text-gray-400'
-              }`} />
-              <div className={`font-medium ${
-                role === 'seller' ? 'text-orange-500' : 'text-gray-500'
-              }`}>
-                Seller
-              </div>
-              <p className="text-sm text-gray-500 mt-1">
-                Sell products and manage sales
-              </p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setRole('chef')}
-              className={`p-4 rounded-lg border-2 transition-colors ${
-                role === 'chef'
-                  ? 'border-orange-500 bg-orange-50'
-                  : 'border-gray-200 hover:border-orange-200'
-              }`}
-            >
-              <ChefHat className={`w-8 h-8 mx-auto mb-2 ${
-                role === 'chef' ? 'text-orange-500' : 'text-gray-400'
-              }`} />
-              <div className={`font-medium ${
-                role === 'chef' ? 'text-orange-500' : 'text-gray-500'
-              }`}>
-                Chef
-              </div>
-              <p className="text-sm text-gray-500 mt-1">
-                Create and share recipes
-              </p>
-            </button>
+          <div className="flex flex-wrap justify-center gap-2">
+            {[
+              {
+                roleType: 'user',
+                icon: <User className="w-6 h-6 mb-1" />,
+                label: 'Regular User',
+                description: 'Browse and save recipes',
+              },
+              {
+                roleType: 'seller',
+                icon: <ShoppingCart className="w-6 h-6 mb-1" />,
+                label: 'Seller',
+                description: 'Sell products and manage sales',
+              },
+              {
+                roleType: 'chef',
+                icon: <ChefHat className="w-6 h-6 mb-1" />,
+                label: 'Chef',
+                description: 'Create and share recipes',
+              },
+            ].map(({ roleType, icon, label, description }) => (
+              <button
+                key={roleType}
+                type="button"
+                onClick={() => setRole(roleType as 'user' | 'chef' | 'seller')}
+                className={`w-[100px] sm:w-[130px] p-3 rounded-lg border-2 transition-colors text-black ${
+                  role === roleType
+                    ? 'border-orange-500 bg-orange-50'
+                    : 'border-gray-200 hover:border-orange-200'
+                }`}
+              >
+                <div className="flex flex-col items-center text-center">
+                  {icon}
+                  <div className={`text-sm font-semibold ${role === roleType ? 'text-orange-500' : 'text-gray-900'}`}>
+                    {label}
+                  </div>
+                  <p className="text-[11px] text-gray-700">{description}</p>
+                </div>
+              </button>
+            ))}
           </div>
 
-          <div className="rounded-md shadow-sm space-y-4">
+          {/* Form Fields */}
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="first-name" className="block text-sm font-medium text-gray-700">
-                First Name
-              </label>
-              <input
-                id="first-name"
-                name="first-name"
-                type="text"
-                required
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="last-name" className="block text-sm font-medium text-gray-700">
-                Last Name
-              </label>
-              <input
-                id="last-name"
-                name="last-name"
-                type="text"
-                required
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-              />
+              <label className="block text-sm font-medium text-gray-900">First Name</label>
+              <div className="mt-1 flex items-center border rounded-md shadow-sm px-3 py-2 focus-within:ring-2 focus-within:ring-orange-500">
+                <User className="w-5 h-5 text-gray-400 mr-2" />
+                <input
+                  type="text"
+                  required
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full focus:outline-none"
+                  placeholder="Enter your first name"
+                />
+              </div>
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-              />
+              <label className="block text-sm font-medium text-gray-900">Last Name</label>
+              <div className="mt-1 flex items-center border rounded-md shadow-sm px-3 py-2 focus-within:ring-2 focus-within:ring-orange-500">
+                <User className="w-5 h-5 text-gray-400 mr-2" />
+                <input
+                  type="text"
+                  required
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full focus:outline-none"
+                  placeholder="Enter your last name"
+                />
+              </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-              />
-              <p className="mt-1 text-sm text-gray-500">
-                Must be at least 6 characters long
-              </p>
+              <label className="block text-sm font-medium text-gray-900">Email</label>
+              <div className="mt-1 flex items-center border rounded-md shadow-sm px-3 py-2 focus-within:ring-2 focus-within:ring-orange-500">
+                <Mail className="w-5 h-5 text-gray-400 mr-2" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full focus:outline-none"
+                  placeholder="Enter your email"
+                />
+              </div>
             </div>
 
             <div>
-              <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700">
-                Confirm password
-              </label>
-              <input
-                id="confirm-password"
-                name="confirm-password"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-              />
+              <label className="block text-sm font-medium text-gray-900">Password</label>
+              <div className="mt-1 flex items-center border rounded-md shadow-sm px-3 py-2 focus-within:ring-2 focus-within:ring-orange-500">
+                <Lock className="w-5 h-5 text-gray-400 mr-2" />
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full focus:outline-none"
+                  placeholder="Enter your password"
+                />
+              </div>
+              <p className="mt-1 text-sm text-gray-800">Must be at least 6 characters long</p>
             </div>
-          </div>
 
-          <div>
+            <div>
+              <label className="block text-sm font-medium text-gray-900">Confirm Password</label>
+              <div className="mt-1 flex items-center border rounded-md shadow-sm px-3 py-2 focus-within:ring-2 focus-within:ring-orange-500">
+                <Lock className="w-5 h-5 text-gray-400 mr-2" />
+                <input
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full focus:outline-none"
+                  placeholder="Confirm your password"
+                />
+              </div>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             >
               {loading ? 'Creating account...' : 'Create account'}
             </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );
 };
 
 export default RegisterPage;
+

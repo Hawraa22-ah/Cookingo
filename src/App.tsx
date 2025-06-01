@@ -15,6 +15,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import { AuthProvider } from './contexts/AuthContext';
 import SellerDashboard from './pages/seller/SellerDashboard';
 import ProductsPage from './pages/ProductsPage';
+import SettingsPage from './pages/SettingsPage';
 
 
 
@@ -36,6 +37,7 @@ function App() {
             <Route path="chef/dashboard" element={<ChefDashboardPage />} />
             <Route path="seller/dashboard" element={<SellerDashboard />} />
             <Route path="/products" element={<ProductsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
 
             <Route path="*" element={<NotFoundPage />} />
           </Route>

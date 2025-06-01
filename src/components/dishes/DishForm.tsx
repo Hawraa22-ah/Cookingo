@@ -11,7 +11,10 @@ const DishForm: React.FC<DishFormProps> = ({ onSubmit, onCancel }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState<number>(0);
-  const [image, setImage] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [servings, setServings] = useState<number>(1);
+  const [time, setTime] = useState<number>(30);
+  const [difficulty, setDifficulty] = useState('Medium');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,37 +22,57 @@ const DishForm: React.FC<DishFormProps> = ({ onSubmit, onCancel }) => {
     setLoading(true);
 
     try {
-      let imageUrl = '';
+      const userRes = await supabase.auth.getUser();
+      const user = userRes.data.user;
+      const chefId = user?.id;
 
-      if (image) {
-        const fileExt = image.name.split('.').pop();
-        const filePath = `dishes/${Date.now()}.${fileExt}`;
+      // ✅ Get chef name from metadata or fallback to 'profiles'
+      let chefName = user?.user_metadata?.full_name || '';
 
-        const { error: uploadError } = await supabase.storage
-          .from('public') // replace 'public' with your actual bucket name if different
-          .upload(filePath, image);
+      if (!chefName && chefId) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', chefId)
+          .single();
 
-        if (uploadError) throw uploadError;
+        if (profileError) {
+          console.warn('Profile fallback failed:', profileError.message);
+        }
 
-        const { data } = supabase.storage.from('public').getPublicUrl(filePath);
-        imageUrl = data.publicUrl;
+        chefName = profileData?.full_name || 'Unknown Chef';
       }
 
-      const { data: userData } = await supabase.auth.getUser();
-      const user = userData?.user;
+      // ✅ Upload image to Supabase Storage if provided
+      let imagePath = '';
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `public/${Date.now()}-${imageFile.name}`;
+        const { data, error: uploadError } = await supabase.storage
+          .from('dish-images')
+          .upload(fileName, imageFile);
 
+        if (uploadError) throw uploadError;
+        imagePath = data.path;
+      }
+
+      // ✅ Insert new dish
       const { error } = await supabase.from('dishes').insert({
+        chef_id: chefId,
+        chef_name: chefName,
         title,
         description,
         price,
-        image_url: imageUrl,
-        chef_id: user?.id,
+        servings,
+        time,
+        difficulty,
+        image_path: imagePath,
         status: 'published',
       });
 
       if (error) throw error;
 
-      toast.success('Dish created!');
+      toast.success('Dish created successfully');
       onSubmit();
     } catch (err: any) {
       console.error(err);
@@ -65,20 +88,20 @@ const DishForm: React.FC<DishFormProps> = ({ onSubmit, onCancel }) => {
         <label className="block font-medium">Title</label>
         <input
           type="text"
-          className="w-full border rounded px-3 py-2"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
+          className="w-full border rounded px-3 py-2"
         />
       </div>
 
       <div>
         <label className="block font-medium">Description</label>
         <textarea
-          className="w-full border rounded px-3 py-2"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           required
+          className="w-full border rounded px-3 py-2"
         />
       </div>
 
@@ -86,11 +109,46 @@ const DishForm: React.FC<DishFormProps> = ({ onSubmit, onCancel }) => {
         <label className="block font-medium">Price ($)</label>
         <input
           type="number"
-          className="w-full border rounded px-3 py-2"
           value={price}
           onChange={(e) => setPrice(parseFloat(e.target.value))}
           required
+          className="w-full border rounded px-3 py-2"
         />
+      </div>
+
+      <div>
+        <label className="block font-medium">Servings</label>
+        <input
+          type="number"
+          value={servings}
+          onChange={(e) => setServings(Number(e.target.value))}
+          required
+          className="w-full border rounded px-3 py-2"
+        />
+      </div>
+
+      <div>
+        <label className="block font-medium">Time (minutes)</label>
+        <input
+          type="number"
+          value={time}
+          onChange={(e) => setTime(Number(e.target.value))}
+          required
+          className="w-full border rounded px-3 py-2"
+        />
+      </div>
+
+      <div>
+        <label className="block font-medium">Difficulty</label>
+        <select
+          value={difficulty}
+          onChange={(e) => setDifficulty(e.target.value)}
+          className="w-full border rounded px-3 py-2"
+        >
+          <option value="Easy">Easy</option>
+          <option value="Medium">Medium</option>
+          <option value="Hard">Hard</option>
+        </select>
       </div>
 
       <div>
@@ -98,7 +156,8 @@ const DishForm: React.FC<DishFormProps> = ({ onSubmit, onCancel }) => {
         <input
           type="file"
           accept="image/*"
-          onChange={(e) => setImage(e.target.files?.[0] || null)}
+          onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+          className="w-full border rounded px-3 py-2"
         />
       </div>
 
@@ -119,3 +178,5 @@ const DishForm: React.FC<DishFormProps> = ({ onSubmit, onCancel }) => {
 };
 
 export default DishForm;
+
+

@@ -116,55 +116,63 @@ const DailyDishPage: React.FC = () => {
                     alt={dish.title}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute top-4 right-4 bg-white rounded-full px-3 py-1 flex items-center shadow-md">
-                    <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                    <span className="ml-1 font-medium">{averageRating}</span>
-                  </div>
+                  
                 </div>
+                
                 <div className="lg:w-1/2 p-8">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-4 font-serif">{dish.title}</h2>
-                  <p className="text-gray-600 mb-6">{dish.description}</p>
+  <h2 className="text-2xl font-bold text-gray-800 mb-1 font-serif">{dish.title}</h2>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <Clock className="w-5 h-5 mx-auto mb-1 text-orange-500" />
-                      <span className="text-sm text-gray-600">{formatTime(30)}</span>
-                    </div>
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <Users className="w-5 h-5 mx-auto mb-1 text-orange-500" />
-                      <span className="text-sm text-gray-600">4 servings</span>
-                    </div>
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <ChefHat className="w-5 h-5 mx-auto mb-1 text-orange-500" />
-                      <span className="text-sm text-gray-600">{dish.difficulty || 'Medium'}</span>
-                    </div>
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <ShoppingBag className="w-5 h-5 mx-auto mb-1 text-orange-500" />
-                      <span className="text-sm text-gray-600">${dish.price}</span>
-                    </div>
-                  </div>
+  {/* ✅ Chef name shown below title */}
+  <p className="text-sm text-gray-500 mb-4">By: {dish.chef_name || 'Unknown Chef'}</p>
 
-                  <div className="mb-6">
-                    <h3 className="text-gray-800 font-medium mb-2">Tags:</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {dish.tags?.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+  <p className="text-gray-600 mb-6">{dish.description}</p>
 
-                  <button
-                    onClick={() => setSelectedDish(dish)}
-                    className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-medium transition-colors w-full sm:w-auto"
-                  >
-                    Order Now
-                  </button>
-                </div>
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div className="text-center p-3 bg-gray-50 rounded-lg">
+      <Clock className="w-5 h-5 mx-auto mb-1 text-orange-500" />
+      <span className="text-sm text-gray-600">
+        {dish.time ? formatTime(dish.time) : 'N/A'}
+      </span>
+    </div>
+    <div className="text-center p-3 bg-gray-50 rounded-lg">
+      <Users className="w-5 h-5 mx-auto mb-1 text-orange-500" />
+      <span className="text-sm text-gray-600">
+        {dish.servings ? `${dish.servings} servings` : 'N/A'}
+      </span>
+    </div>
+    <div className="text-center p-3 bg-gray-50 rounded-lg">
+      <ChefHat className="w-5 h-5 mx-auto mb-1 text-orange-500" />
+      <span className="text-sm text-gray-600">
+        {dish.difficulty || 'N/A'}
+      </span>
+    </div>
+    <div className="text-center p-3 bg-gray-50 rounded-lg">
+      <ShoppingBag className="w-5 h-5 mx-auto mb-1 text-orange-500" />
+      <span className="text-sm text-gray-600">${dish.price}</span>
+    </div>
+  </div>
+
+  <div className="mb-6">
+    <div className="flex flex-wrap gap-2">
+      {dish.tags?.map((tag, index) => (
+        <span
+          key={index}
+          className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
+        >
+          {tag}
+        </span>
+      ))}
+    </div>
+  </div>
+
+  <button
+    onClick={() => setSelectedDish(dish)}
+    className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-medium transition-colors w-full sm:w-auto"
+  >
+    Order Now
+  </button>
+</div>
+
               </div>
             </div>
           );
