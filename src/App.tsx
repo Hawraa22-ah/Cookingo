@@ -16,6 +16,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import SellerDashboard from './pages/seller/SellerDashboard';
 import ProductsPage from './pages/ProductsPage';
 import SettingsPage from './pages/SettingsPage';
+import SavedRecipes from './components/recipes/SavedRecipes';
 
 
 
@@ -38,6 +39,7 @@ function App() {
             <Route path="seller/dashboard" element={<SellerDashboard />} />
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/saved-recipes" element={<SavedRecipes />} />
 
             <Route path="*" element={<NotFoundPage />} />
           </Route>

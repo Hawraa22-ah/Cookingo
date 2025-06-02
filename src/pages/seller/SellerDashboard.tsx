@@ -2,15 +2,13 @@ import { useEffect, useState } from 'react';
 import { supabase } from "../../lib/supabase";
 import { useNavigate } from 'react-router-dom';
 
-
-
 export default function SellerDashboard() {
   const [username, setUsername] = useState('');
   const [userId, setUserId] = useState('');
   const [newProduct, setNewProduct] = useState({ name: '', price: '', category: 'vegetables', image_url: '' });
   const [products, setProducts] = useState([]);
   const [editId, setEditId] = useState(null);
-  const [editValues, setEditValues] = useState({ name: '', price: '', category: '' });
+  const [editValues, setEditValues] = useState({ name: '', price: '', category: '', image_url: '' });
   const navigate = useNavigate();
 
   const categories = ['vegetables', 'ingredients', 'spices', 'tools'];
@@ -20,15 +18,8 @@ export default function SellerDashboard() {
       const { data } = await supabase.auth.getUser();
       const user = data?.user;
 
-      if (!user) {
-        navigate('/login');
-        return;
-      }
-
-      if (user.user_metadata.role !== 'seller') {
-        navigate('/unauthorized');
-        return;
-      }
+      if (!user) return navigate('/login');
+      if (user.user_metadata.role !== 'seller') return navigate('/unauthorized');
 
       setUsername(user.user_metadata.username);
       setUserId(user.id);
@@ -51,9 +42,7 @@ export default function SellerDashboard() {
   };
 
   useEffect(() => {
-    if (userId) {
-      fetchProducts();
-    }
+    if (userId) fetchProducts();
   }, [userId]);
 
   const addProduct = async () => {
@@ -62,17 +51,15 @@ export default function SellerDashboard() {
       return;
     }
 
-    const { error } = await supabase
-      .from('seller_products')
-      .insert([
-        {
-          name: newProduct.name,
-          price: parseFloat(newProduct.price),
-          category: newProduct.category,
-          image_url: newProduct.image_url,
-          seller_id: userId,
-        },
-      ]);
+    const { error } = await supabase.from('seller_products').insert([
+      {
+        name: newProduct.name,
+        price: parseFloat(newProduct.price),
+        category: newProduct.category,
+        image_url: newProduct.image_url,
+        seller_id: userId,
+      },
+    ]);
 
     if (error) {
       alert('Failed to add product');
@@ -83,12 +70,66 @@ export default function SellerDashboard() {
     }
   };
 
-  const getCategoryCount = (category) => {
-    return products.filter(p => p.category === category).length;
+  const editProduct = (product) => {
+    setEditId(product.id);
+    setEditValues({
+      name: product.name,
+      price: product.price.toString(),
+      category: product.category,
+      image_url: product.image_url || '',
+    });
   };
 
-  const getCategorySample = (category, count = 2) => {
-    return products.filter(p => p.category === category).slice(0, count);
+  const saveEdit = async () => {
+    if (!editValues.name || !editValues.price) {
+      alert('Please fill out all fields.');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('seller_products')
+      .update({
+        name: editValues.name,
+        price: parseFloat(editValues.price),
+        category: editValues.category,
+        image_url: editValues.image_url,
+      })
+      .eq('id', editId)
+      .eq('seller_id', userId);
+
+    if (error) {
+      console.error('Failed to update product:', error);
+      alert('Update failed.');
+    } else {
+      setEditId(null);
+      setEditValues({ name: '', price: '', category: '', image_url: '' });
+      fetchProducts();
+    }
+  };
+
+   const deleteProduct = async (id) => {
+    const confirmDelete = window.confirm("Are you sure?");
+    if (!confirmDelete) return;
+
+    if (!userId) {
+      alert("User ID not found. Please try again.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from('seller_products')
+      .delete()
+      .eq('id', id)
+      .eq('seller_id', userId);
+
+    if (error) {
+      console.error("Supabase delete error:", error);
+      alert("Delete failed: " + error.message);
+    } else {
+      alert("Product deleted successfully.");
+      // ✅ Optimistic UI update
+      setProducts(prev => prev.filter(p => p.id !== id));
+    }
   };
 
   const totalPrice = products.reduce((sum, p) => sum + parseFloat(p.price), 0);
@@ -99,6 +140,7 @@ export default function SellerDashboard() {
       <h1 className="text-2xl font-bold mb-2 text-orange-600">Seller Dashboard</h1>
       <p className="text-gray-600 mb-6">Welcome back, {username}! Manage your kitchen products here.</p>
 
+      {/* Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white shadow p-4 rounded">
           <h3 className="text-sm text-gray-500">Total Products</h3>
@@ -118,12 +160,13 @@ export default function SellerDashboard() {
         </div>
       </div>
 
+      {/* Add Product */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
         <h2 className="text-xl font-semibold mb-4">🛒 Add New Product</h2>
 
         <input
           type="text"
-          placeholder="Product Image URL from Supabase"
+          placeholder="Product Image URL"
           className="w-full mb-2 p-2 border rounded"
           value={newProduct.image_url}
           onChange={(e) => setNewProduct({ ...newProduct, image_url: e.target.value })}
@@ -161,22 +204,60 @@ export default function SellerDashboard() {
         </button>
       </div>
 
+      {/* Product List */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
         <h2 className="text-xl font-semibold mb-2">🛍️ Mini Market Preview</h2>
-        {categories.map((cat) => (
-          <div key={cat} className="mb-4">
-            <h3 className="font-medium mb-2">{cat.charAt(0).toUpperCase() + cat.slice(1)}</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {getCategorySample(cat).map((p) => (
-                <div key={p.id} className="border p-3 rounded">
-                  {p.image_url && <img src={p.image_url} alt="product" className="h-24 w-full object-cover mb-2 rounded" />}
-                  <div className="font-medium">{p.name}</div>
-                  <div className="text-sm text-gray-600">${p.price.toFixed(2)}</div>
-                </div>
-              ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {products.map((p) => (
+            <div key={p.id} className="border p-4 rounded bg-gray-50">
+              {editId === p.id ? (
+                <>
+                  <input
+                    type="text"
+                    className="w-full mb-1 p-1 border rounded"
+                    value={editValues.name}
+                    onChange={(e) => setEditValues({ ...editValues, name: e.target.value })}
+                  />
+                  <input
+                    type="number"
+                    className="w-full mb-1 p-1 border rounded"
+                    value={editValues.price}
+                    onChange={(e) => setEditValues({ ...editValues, price: e.target.value })}
+                  />
+                  <input
+                    type="text"
+                    className="w-full mb-1 p-1 border rounded"
+                    value={editValues.image_url}
+                    onChange={(e) => setEditValues({ ...editValues, image_url: e.target.value })}
+                  />
+                  <select
+                    className="w-full mb-2 p-1 border rounded"
+                    value={editValues.category}
+                    onChange={(e) => setEditValues({ ...editValues, category: e.target.value })}
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                  <div className="flex gap-2">
+                    <button onClick={saveEdit} className="bg-green-500 text-white px-3 py-1 rounded">Save</button>
+                    <button onClick={() => setEditId(null)} className="bg-gray-400 text-white px-3 py-1 rounded">Cancel</button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {p.image_url && <img src={p.image_url} alt={p.name} className="h-24 w-full object-cover rounded mb-2" />}
+                  <div className="font-semibold">{p.name}</div>
+                  <div className="text-sm text-gray-600 mb-2">${p.price.toFixed(2)}</div>
+                  <div className="flex gap-2">
+                    <button onClick={() => editProduct(p)} className="bg-blue-500 text-white px-3 py-1 rounded text-sm">Edit</button>
+                    <button onClick={() => deleteProduct(p.id)} className="bg-red-500 text-white px-3 py-1 rounded text-sm">Delete</button>
+                  </div>
+                </>
+              )}
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
