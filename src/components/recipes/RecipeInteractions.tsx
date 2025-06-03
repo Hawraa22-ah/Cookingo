@@ -260,7 +260,7 @@ const RecipeInteractions: React.FC<RecipeInteractionsProps> = ({ recipeId }) => 
   const loadInteractions = async (userId: string) => {
     try {
       const { data: favData } = await supabase
-        .from('saved_recipes')
+        .from('favorites')
         .select('*')
         .eq('user_id', userId)
         .eq('recipe_id', recipeId)
@@ -268,7 +268,7 @@ const RecipeInteractions: React.FC<RecipeInteractionsProps> = ({ recipeId }) => 
       setIsFavorite(!!favData);
 
       const { data: ratingData } = await supabase
-        .from('ratings')
+        .from('recipe_ratings')
         .select('*')
         .eq('user_id', userId)
         .eq('recipe_id', recipeId)
@@ -319,11 +319,19 @@ const RecipeInteractions: React.FC<RecipeInteractionsProps> = ({ recipeId }) => 
   const handleRating = async (rating: number) => {
     if (!currentUserId) return toast.error('Please sign in to rate');
     try {
-      await supabase.from('ratings').upsert({
+      const { error } = await supabase.from('recipe_ratings').upsert({
         user_id: currentUserId,
         recipe_id: recipeId,
         rating,
+      }, {
+        onConflict: ['user_id', 'recipe_id'],
       });
+
+      if (error) {
+        console.error('Rating insert error:', error);
+        toast.error('Failed to save rating');
+        return;
+      }
 
       await supabase.rpc('update_recipe_rating', { recipe_id_input: recipeId });
       setUserRating(rating);
@@ -339,7 +347,7 @@ const RecipeInteractions: React.FC<RecipeInteractionsProps> = ({ recipeId }) => 
     try {
       if (isFavorite) {
         await supabase
-          .from('saved_recipes')
+          .from('favorites')
           .delete()
           .eq('user_id', currentUserId)
           .eq('recipe_id', recipeId);
@@ -347,7 +355,7 @@ const RecipeInteractions: React.FC<RecipeInteractionsProps> = ({ recipeId }) => 
         toast.success('Removed from favorites');
       } else {
         await supabase
-          .from('saved_recipes')
+          .from('favorites')
           .insert({ user_id: currentUserId, recipe_id: recipeId });
         setIsFavorite(true);
         toast.success('Saved to favorites');

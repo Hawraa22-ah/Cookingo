@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'; 
 import { supabase } from "../../lib/supabase";
 import { useNavigate } from 'react-router-dom';
 
@@ -9,6 +9,8 @@ export default function SellerDashboard() {
   const [products, setProducts] = useState([]);
   const [editId, setEditId] = useState(null);
   const [editValues, setEditValues] = useState({ name: '', price: '', category: '', image_url: '' });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState('all');
   const navigate = useNavigate();
 
   const categories = ['vegetables', 'ingredients', 'spices', 'tools'];
@@ -107,14 +109,9 @@ export default function SellerDashboard() {
     }
   };
 
-   const deleteProduct = async (id) => {
+  const deleteProduct = async (id) => {
     const confirmDelete = window.confirm("Are you sure?");
     if (!confirmDelete) return;
-
-    if (!userId) {
-      alert("User ID not found. Please try again.");
-      return;
-    }
 
     const { error } = await supabase
       .from('seller_products')
@@ -127,13 +124,19 @@ export default function SellerDashboard() {
       alert("Delete failed: " + error.message);
     } else {
       alert("Product deleted successfully.");
-      // ✅ Optimistic UI update
       setProducts(prev => prev.filter(p => p.id !== id));
     }
   };
 
   const totalPrice = products.reduce((sum, p) => sum + parseFloat(p.price), 0);
   const highestPrice = Math.max(0, ...products.map(p => parseFloat(p.price)));
+
+  // Filter logic
+  const filteredProducts = products.filter((p) => {
+    const matchesCategory = filterCategory === 'all' || p.category === filterCategory;
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -163,7 +166,6 @@ export default function SellerDashboard() {
       {/* Add Product */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
         <h2 className="text-xl font-semibold mb-4">🛒 Add New Product</h2>
-
         <input
           type="text"
           placeholder="Product Image URL"
@@ -191,9 +193,7 @@ export default function SellerDashboard() {
           onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
         >
           {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat.charAt(0).toUpperCase() + cat.slice(1)}
-            </option>
+            <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>
           ))}
         </select>
         <button
@@ -204,60 +204,100 @@ export default function SellerDashboard() {
         </button>
       </div>
 
-      {/* Product List */}
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <h2 className="text-xl font-semibold mb-2">🛍️ Mini Market Preview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {products.map((p) => (
-            <div key={p.id} className="border p-4 rounded bg-gray-50">
-              {editId === p.id ? (
-                <>
-                  <input
-                    type="text"
-                    className="w-full mb-1 p-1 border rounded"
-                    value={editValues.name}
-                    onChange={(e) => setEditValues({ ...editValues, name: e.target.value })}
-                  />
-                  <input
-                    type="number"
-                    className="w-full mb-1 p-1 border rounded"
-                    value={editValues.price}
-                    onChange={(e) => setEditValues({ ...editValues, price: e.target.value })}
-                  />
-                  <input
-                    type="text"
-                    className="w-full mb-1 p-1 border rounded"
-                    value={editValues.image_url}
-                    onChange={(e) => setEditValues({ ...editValues, image_url: e.target.value })}
-                  />
-                  <select
-                    className="w-full mb-2 p-1 border rounded"
-                    value={editValues.category}
-                    onChange={(e) => setEditValues({ ...editValues, category: e.target.value })}
-                  >
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                  <div className="flex gap-2">
-                    <button onClick={saveEdit} className="bg-green-500 text-white px-3 py-1 rounded">Save</button>
-                    <button onClick={() => setEditId(null)} className="bg-gray-400 text-white px-3 py-1 rounded">Cancel</button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {p.image_url && <img src={p.image_url} alt={p.name} className="h-24 w-full object-cover rounded mb-2" />}
-                  <div className="font-semibold">{p.name}</div>
-                  <div className="text-sm text-gray-600 mb-2">${p.price.toFixed(2)}</div>
-                  <div className="flex gap-2">
-                    <button onClick={() => editProduct(p)} className="bg-blue-500 text-white px-3 py-1 rounded text-sm">Edit</button>
-                    <button onClick={() => deleteProduct(p.id)} className="bg-red-500 text-white px-3 py-1 rounded text-sm">Delete</button>
-                  </div>
-                </>
-              )}
-            </div>
+      {/* Search & Filter */}
+      <div className="flex flex-col md:flex-row gap-4 items-center mb-6">
+        <input
+          type="text"
+          placeholder="Search by product name..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="p-2 border rounded w-full md:w-1/2"
+        />
+        <select
+          value={filterCategory}
+          onChange={(e) => setFilterCategory(e.target.value)}
+          className="p-2 border rounded w-full md:w-1/3"
+        >
+          <option value="all">All Categories</option>
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>
           ))}
-        </div>
+        </select>
+      </div>
+
+      {/* Product List Grouped by Category */}
+      <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <h2 className="text-xl font-semibold mb-4">🛍️ Filtered Market Preview</h2>
+        {categories.map((cat) => {
+          const catProducts = filteredProducts.filter(p => p.category === cat);
+          if (catProducts.length === 0) return null;
+          return (
+            <div key={cat} className="mb-6">
+              <h3 className="text-lg font-bold text-orange-600 mb-2">{cat.charAt(0).toUpperCase() + cat.slice(1)}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {catProducts.map((p) => (
+                  <div key={p.id} className="border p-4 rounded bg-gray-50">
+                    {editId === p.id ? (
+                      <>
+                        <input
+                          type="text"
+                          className="w-full mb-1 p-1 border rounded"
+                          value={editValues.name}
+                          onChange={(e) => setEditValues({ ...editValues, name: e.target.value })}
+                        />
+                        <input
+                          type="number"
+                          className="w-full mb-1 p-1 border rounded"
+                          value={editValues.price}
+                          onChange={(e) => setEditValues({ ...editValues, price: e.target.value })}
+                        />
+                        <input
+                          type="text"
+                          className="w-full mb-1 p-1 border rounded"
+                          value={editValues.image_url}
+                          onChange={(e) => setEditValues({ ...editValues, image_url: e.target.value })}
+                        />
+                        <select
+                          className="w-full mb-2 p-1 border rounded"
+                          value={editValues.category}
+                          onChange={(e) => setEditValues({ ...editValues, category: e.target.value })}
+                        >
+                          {categories.map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                        <div className="flex gap-2">
+                          <button onClick={saveEdit} className="bg-green-500 text-white px-3 py-1 rounded">Save</button>
+                          <button onClick={() => setEditId(null)} className="bg-gray-400 text-white px-3 py-1 rounded">Cancel</button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {p.image_url && <img src={p.image_url} alt={p.name} className="h-24 w-full object-cover rounded mb-2" />}
+                        <div className="font-semibold">{p.name}</div>
+                        <div className="text-sm text-gray-600 mb-2">${p.price.toFixed(2)}</div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => editProduct(p)}
+                            className="bg-[#FFB347] hover:bg-orange-300 text-white px-3 py-1 rounded text-sm"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => deleteProduct(p.id)}
+                            className="bg-[#B0E57C] hover:bg-green-300 text-white px-3 py-1 rounded text-sm"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

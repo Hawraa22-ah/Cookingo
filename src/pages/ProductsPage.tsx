@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [user, setUser] = useState(null);
-  const [quantities, setQuantities] = useState({});
+  const [quantities, setQuantities] = useState<Record<number, number>>({});
+  // const [quantities, setQuantities] = useState({});
   const [categoryFilter, setCategoryFilter] = useState('all');
   const navigate = useNavigate();
 
@@ -30,7 +32,7 @@ export default function ProductsPage() {
 
   const addToCart = async (productId) => {
     if (!user) {
-      navigate('/login');
+      toast.error('Please log in or register to add products to your cart.');
       return;
     }
 
@@ -42,9 +44,9 @@ export default function ProductsPage() {
 
     if (error) {
       console.error('Add to cart error:', error);
-      alert('Failed to add to cart.');
+      toast.error('Failed to add to cart.');
     } else {
-      alert('Product added to cart!');
+      toast.success('Product added to cart!');
     }
   };
 
@@ -115,10 +117,12 @@ export default function ProductsPage() {
 
                 <button
                   onClick={() => addToCart(product.id)}
-                  className="bg-orange-500 hover:bg-orange-600 text-white text-sm py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`${
+                    user ? 'bg-orange-500 hover:bg-orange-600' : 'bg-gray-300 text-gray-700'
+                  } text-white text-sm py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed`}
                   disabled={product.stock <= 0}
                 >
-                  Add to Cart
+                  {user ? 'Add to Cart' : 'Register to Add'}
                 </button>
               </div>
             </div>

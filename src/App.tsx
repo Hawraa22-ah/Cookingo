@@ -18,8 +18,6 @@ import ProductsPage from './pages/ProductsPage';
 import SettingsPage from './pages/SettingsPage';
 import SavedRecipes from './components/recipes/SavedRecipes';
 
-
-
 function App() {
   return (
     <Router>
@@ -40,7 +38,6 @@ function App() {
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/saved-recipes" element={<SavedRecipes />} />
-
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
@@ -50,3 +47,4 @@ function App() {
 }
 
 export default App;
+
