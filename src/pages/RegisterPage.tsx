@@ -2,10 +2,11 @@
 // import { Link, useNavigate } from 'react-router-dom';
 // import { ChefHat, User, ShoppingCart, Mail, Lock } from 'lucide-react';
 // import { useAuth } from '../contexts/AuthContext';
+// import { supabase } from '../utils/supabaseclient'
 
 // const RegisterPage: React.FC = () => {
-//   const [firstName, setFirstName] = useState('');
-//   const [lastName, setLastName] = useState('');
+//   const [name, setName] = useState('');
+//   const [username, setUsername] = useState('');
 //   const [email, setEmail] = useState('');
 //   const [password, setPassword] = useState('');
 //   const [confirmPassword, setConfirmPassword] = useState('');
@@ -32,9 +33,20 @@
 //     setLoading(true);
 
 //     try {
-//       const fullName = `${firstName} ${lastName}`.trim();
+//       // Check if username already exists
+//       const { data: existingUser, error: usernameCheckError } = await supabase
+//         .from('profiles')
+//         .select('id')
+//         .eq('username', username.trim())
+//         .maybeSingle();
 
-//       const { error: signUpError } = await signUp(email, password, role, fullName);
+//       if (existingUser) {
+//         setError('Username is already taken');
+//         setLoading(false);
+//         return;
+//       }
+
+//       const { error: signUpError } = await signUp(email, password, role, name, username);
 
 //       if (signUpError) {
 //         if (signUpError.message.includes('user_already_exists')) {
@@ -86,23 +98,23 @@
 //           )}
 
 //           {/* Role Selection */}
-//           <div className="flex flex-wrap justify-center gap-4">
+//           <div className="flex flex-wrap justify-center gap-2">
 //             {[
 //               {
 //                 roleType: 'user',
-//                 icon: <User className="w-8 h-8 mb-2" />,
+//                 icon: <User className="w-6 h-6 mb-1" />,
 //                 label: 'Regular User',
 //                 description: 'Browse and save recipes',
 //               },
 //               {
 //                 roleType: 'seller',
-//                 icon: <ShoppingCart className="w-8 h-8 mb-2" />,
+//                 icon: <ShoppingCart className="w-6 h-6 mb-1" />,
 //                 label: 'Seller',
 //                 description: 'Sell products and manage sales',
 //               },
 //               {
 //                 roleType: 'chef',
-//                 icon: <ChefHat className="w-8 h-8 mb-2" />,
+//                 icon: <ChefHat className="w-6 h-6 mb-1" />,
 //                 label: 'Chef',
 //                 description: 'Create and share recipes',
 //               },
@@ -111,7 +123,7 @@
 //                 key={roleType}
 //                 type="button"
 //                 onClick={() => setRole(roleType as 'user' | 'chef' | 'seller')}
-//                 className={`w-[110px] sm:w-[150px] p-4 rounded-lg border-2 transition-colors text-black ${
+//                 className={`w-[100px] sm:w-[130px] p-3 rounded-lg border-2 transition-colors text-black ${
 //                   role === roleType
 //                     ? 'border-orange-500 bg-orange-50'
 //                     : 'border-gray-200 hover:border-orange-200'
@@ -119,10 +131,10 @@
 //               >
 //                 <div className="flex flex-col items-center text-center">
 //                   {icon}
-//                   <div className={`font-semibold ${role === roleType ? 'text-orange-500' : 'text-gray-900'}`}>
+//                   <div className={`text-sm font-semibold ${role === roleType ? 'text-orange-500' : 'text-gray-900'}`}>
 //                     {label}
 //                   </div>
-//                   <p className="text-xs text-gray-800">{description}</p>
+//                   <p className="text-[11px] text-gray-700">{description}</p>
 //                 </div>
 //               </button>
 //             ))}
@@ -131,31 +143,31 @@
 //           {/* Form Fields */}
 //           <form className="space-y-4" onSubmit={handleSubmit}>
 //             <div>
-//               <label className="block text-sm font-medium text-gray-900">First Name</label>
+//               <label className="block text-sm font-medium text-gray-900">Full Name</label>
 //               <div className="mt-1 flex items-center border rounded-md shadow-sm px-3 py-2 focus-within:ring-2 focus-within:ring-orange-500">
 //                 <User className="w-5 h-5 text-gray-400 mr-2" />
 //                 <input
 //                   type="text"
 //                   required
-//                   value={firstName}
-//                   onChange={(e) => setFirstName(e.target.value)}
+//                   value={name}
+//                   onChange={(e) => setName(e.target.value)}
 //                   className="w-full focus:outline-none"
-//                   placeholder="Enter your first name"
+//                   placeholder="Enter your full name"
 //                 />
 //               </div>
 //             </div>
 
 //             <div>
-//               <label className="block text-sm font-medium text-gray-900">Last Name</label>
+//               <label className="block text-sm font-medium text-gray-900">Username</label>
 //               <div className="mt-1 flex items-center border rounded-md shadow-sm px-3 py-2 focus-within:ring-2 focus-within:ring-orange-500">
 //                 <User className="w-5 h-5 text-gray-400 mr-2" />
 //                 <input
 //                   type="text"
 //                   required
-//                   value={lastName}
-//                   onChange={(e) => setLastName(e.target.value)}
+//                   value={username}
+//                   onChange={(e) => setUsername(e.target.value)}
 //                   className="w-full focus:outline-none"
-//                   placeholder="Enter your last name"
+//                   placeholder="Choose a unique username"
 //                 />
 //               </div>
 //             </div>
@@ -226,10 +238,11 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChefHat, User, ShoppingCart, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../utils/supabaseclient';
 
 const RegisterPage: React.FC = () => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -253,14 +266,30 @@ const RegisterPage: React.FC = () => {
       return;
     }
 
+    if (!['user', 'chef', 'seller'].includes(role)) {
+      setError('Invalid role selected');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const fullName = `${firstName} ${lastName}`.trim();
-      const { error: signUpError } = await signUp(email, password, role, fullName);
+      const { data: existingUser, error: usernameCheckError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username.trim())
+        .maybeSingle();
+
+      if (existingUser) {
+        setError('Username is already taken');
+        setLoading(false);
+        return;
+      }
+
+      const { error: signUpError } = await signUp(email, password, role, name, username);
 
       if (signUpError) {
-        if (signUpError.message.includes('user_already_exists')) {
+        if (signUpError.message.toLowerCase().includes('user_already_exists')) {
           throw new Error('This email is already registered.');
         }
         throw signUpError;
@@ -354,31 +383,31 @@ const RegisterPage: React.FC = () => {
           {/* Form Fields */}
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-gray-900">First Name</label>
+              <label className="block text-sm font-medium text-gray-900">Full Name</label>
               <div className="mt-1 flex items-center border rounded-md shadow-sm px-3 py-2 focus-within:ring-2 focus-within:ring-orange-500">
                 <User className="w-5 h-5 text-gray-400 mr-2" />
                 <input
                   type="text"
                   required
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="w-full focus:outline-none"
-                  placeholder="Enter your first name"
+                  placeholder="Enter your full name"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-900">Last Name</label>
+              <label className="block text-sm font-medium text-gray-900">Username</label>
               <div className="mt-1 flex items-center border rounded-md shadow-sm px-3 py-2 focus-within:ring-2 focus-within:ring-orange-500">
                 <User className="w-5 h-5 text-gray-400 mr-2" />
                 <input
                   type="text"
                   required
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="w-full focus:outline-none"
-                  placeholder="Enter your last name"
+                  placeholder="Choose a unique username"
                 />
               </div>
             </div>
@@ -444,4 +473,3 @@ const RegisterPage: React.FC = () => {
 };
 
 export default RegisterPage;
-

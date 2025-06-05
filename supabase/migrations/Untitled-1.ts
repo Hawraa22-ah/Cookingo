@@ -1,27 +1,30 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
 
+// ====================
+// Context Type
+// ====================
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (
-    email: string,
-    password: string,
-    role?: string,
-    fullName?: string,
-    username?: string
-  ) => Promise<{ error?: Error }>;
+  signUp: (email: string, password: string, role?: string, fullName?: string) => Promise<{ error?: Error }>;
   signOut: () => Promise<void>;
   handleAuthError: (error: any) => Promise<void>;
 }
 
-
+// ====================
+// Create Context
+// ====================
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// ====================
+// Hook
+// ====================
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -30,35 +33,51 @@ export const useAuth = () => {
   return context;
 };
 
+// ====================
+// Public Routes
+// ====================
 const publicPaths = ['/', '/recipes', '/daily-dish', '/login', '/register', '/products'];
 
+// ====================
+// Provider
+// ====================
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
+  // ====================
+  // Auth State Sync
+  // ====================
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
       if (!session && !loading && !publicPaths.includes(location.pathname)) {
         navigate('/login');
       }
     });
 
-    return () => authListener?.subscription?.unsubscribe();
+    return () => subscription.unsubscribe();
   }, [navigate, loading, location.pathname]);
 
+  // ====================
+  // Route Guard
+  // ====================
   useEffect(() => {
     if (!loading && !user && !publicPaths.includes(location.pathname)) {
       navigate('/login');
     }
   }, [loading, user, location.pathname, navigate]);
+
+  // ====================
+  // Auth Handlers
+  // ====================
 
   const handleAuthError = async (error: any) => {
     if (
@@ -76,11 +95,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
       if (error) throw error;
       toast.success('Welcome back!');
     } catch (error) {
-      if (error instanceof Error) toast.error(error.message);
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
       throw error;
     }
   };
@@ -89,49 +114,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     email: string,
     password: string,
     role: string = 'user',
-    fullName: string = '',
-    username?: string
+    fullName: string = ''
   ): Promise<{ error?: Error }> => {
     try {
-      const autoUsername = username?.trim() || email.split('@')[0];
+      const { data: { user: newUser }, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            role,
+          }
+        }
+      });
 
-      const { data: existingUser, error: usernameCheckError } = await supabase
+      if (signUpError) throw signUpError;
+      if (!newUser) throw new Error('User creation failed');
+
+      const { data: existingProfile, error: profileCheckError } = await supabase
         .from('profiles')
         .select('id')
-        .eq('username', autoUsername)
+        .eq('id', newUser.id)
         .maybeSingle();
 
-      if (usernameCheckError) throw usernameCheckError;
-      if (existingUser) {
-        return { error: new Error('This username is already taken.') };
-      }
+      if (profileCheckError) throw profileCheckError;
 
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
-      if (signUpError) throw signUpError;
+      const displayName = fullName || email.split('@')[0];
 
-      const { data: sessionUser, error: userFetchError } = await supabase.auth.getUser();
-      if (userFetchError) throw userFetchError;
+      if (!existingProfile) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([{
+            id: newUser.id,
+            full_name: displayName,
+            role: role
+          }]);
 
-      if (!sessionUser?.user) {
-        toast.success('Account created successfully! Please check your email to verify your account.');
-        return {};
-      }
+        if (profileError) {
+          await supabase.auth.signOut();
+          throw new Error('Failed to create user profile. Please try again.');
+        }
+      } else {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ role })
+          .eq('id', newUser.id);
 
-      const profile = {
-        id: sessionUser.user.id,
-        full_name: fullName.trim(),
-        username: autoUsername,
-        role,
-        avatar_url: '',
-        // email: email.trim().toLowerCase(), // Uncomment only if your table supports this
-        // created_at: new Date().toISOString(), // Avoid manual timestamp unless needed
-      };
-
-      const { error: profileError } = await supabase.from('profiles').upsert([profile]);
-      if (profileError) {
-        console.error('❌ Supabase insert failed:', profileError);
-        await supabase.auth.signOut();
-        throw new Error(`Database error saving new user: ${profileError.message}`);
+        if (updateError) {
+          await supabase.auth.signOut();
+          throw new Error('Failed to update user role. Please try again.');
+        }
       }
 
       toast.success('Account created successfully! Please check your email to verify your account.');
@@ -152,12 +183,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       navigate('/login');
       toast.success('Signed out successfully');
     } catch (error) {
-      if (error instanceof Error) toast.error(error.message);
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
       throw error;
     }
   };
 
-  const value = { user, loading, signIn, signUp, signOut, handleAuthError };
+  // ====================
+  // Provide Context
+  // ====================
+  const value = {
+    user,
+    loading,
+    signIn,
+    signUp,
+    signOut,
+    handleAuthError,
+  };
 
-  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {!loading && children}
+    </AuthContext.Provider>
+  );
 };
