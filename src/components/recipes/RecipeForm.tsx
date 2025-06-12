@@ -1,3 +1,615 @@
+// // import React, { useState } from 'react';
+// // import { useNavigate } from 'react-router-dom';
+// // import { Plus, Minus, Save, X } from 'lucide-react';
+// // import { supabase } from '../../lib/supabase';
+// // import { Recipe } from '../../types';
+// // import toast from 'react-hot-toast';
+
+// // interface RecipeFormProps {
+// //   initialData?: Partial<Recipe>;
+// //   onSubmit?: (recipe: Recipe) => void;
+// //   onCancel?: () => void;
+// // }
+
+// // const RecipeForm: React.FC<RecipeFormProps> = ({
+// //   initialData,
+// //   onSubmit,
+// //   onCancel
+// // }) => {
+// //   const navigate = useNavigate();
+// //   const [loading, setLoading] = useState(false);
+// //   const [formData, setFormData] = useState({
+// //     title: initialData?.title || '',
+// //     description: initialData?.description || '',
+// //     image_url: initialData?.image_url || '',
+// //     cook_time: initialData?.cook_time || 30,
+// //     prep_time: initialData?.prep_time || 15,
+// //     servings: initialData?.servings || 4,
+// //     ingredients: initialData?.ingredients || [{ name: '', amount: '', unit: '' }],
+// //     instructions: initialData?.instructions || [{ step: 1, text: '' }],
+// //     tags: initialData?.tags || [],
+// //     status: initialData?.status || 'published'
+// //   });
+
+// //   const handleSubmit = async (e: React.FormEvent) => {
+// //     e.preventDefault();
+// //     setLoading(true);
+
+// //     try {
+// //       const { data: { user } } = await supabase.auth.getUser();
+// //       if (!user) throw new Error('Not authenticated');
+
+// //       const recipeData = {
+// //         ...formData,
+// //         chef_id: user.id
+// //       };
+
+// //       const { data, error } = await supabase
+// //         .from('recipes')
+// //         .upsert([
+// //           initialData?.id
+// //             ? { id: initialData.id, ...recipeData }
+// //             : recipeData
+// //         ])
+// //         .select()
+// //         .single();
+
+// //       if (error) throw error;
+
+// //       toast.success(initialData?.id ? 'Recipe updated successfully' : 'Recipe created successfully');
+
+// //       if (onSubmit) {
+// //         onSubmit(data);
+// //       }
+
+// //       navigate('/recipes');
+// //     } catch (error) {
+// //       console.error('Error saving recipe:', error);
+// //       toast.error('Failed to save recipe');
+// //     } finally {
+// //       setLoading(false);
+// //     }
+// //   };
+
+// //   const addIngredient = () => {
+// //     setFormData(prev => ({
+// //       ...prev,
+// //       ingredients: [...prev.ingredients, { name: '', amount: '', unit: '' }]
+// //     }));
+// //   };
+
+// //   const removeIngredient = (index: number) => {
+// //     setFormData(prev => ({
+// //       ...prev,
+// //       ingredients: prev.ingredients.filter((_, i) => i !== index)
+// //     }));
+// //   };
+
+// //   const updateIngredient = (index: number, field: string, value: string) => {
+// //     setFormData(prev => ({
+// //       ...prev,
+// //       ingredients: prev.ingredients.map((ingredient, i) =>
+// //         i === index ? { ...ingredient, [field]: value } : ingredient
+// //       )
+// //     }));
+// //   };
+
+// //   const addInstruction = () => {
+// //     setFormData(prev => ({
+// //       ...prev,
+// //       instructions: [
+// //         ...prev.instructions,
+// //         { step: prev.instructions.length + 1, text: '' }
+// //       ]
+// //     }));
+// //   };
+
+// //   const removeInstruction = (index: number) => {
+// //     setFormData(prev => ({
+// //       ...prev,
+// //       instructions: prev.instructions
+// //         .filter((_, i) => i !== index)
+// //         .map((instruction, i) => ({ ...instruction, step: i + 1 }))
+// //     }));
+// //   };
+
+// //   const updateInstruction = (index: number, text: string) => {
+// //     setFormData(prev => ({
+// //       ...prev,
+// //       instructions: prev.instructions.map((instruction, i) =>
+// //         i === index ? { ...instruction, text } : instruction
+// //       )
+// //     }));
+// //   };
+
+// //   return (
+// //     <form onSubmit={handleSubmit} className="space-y-8">
+// //       <div className="space-y-4">
+// //         <h2 className="text-xl font-bold">Basic Information</h2>
+
+// //         <div>
+// //           <label className="block text-sm font-medium">Title</label>
+// //           <input
+// //             type="text"
+// //             value={formData.title}
+// //             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+// //             className="w-full border px-3 py-2 rounded"
+// //             required
+// //           />
+// //         </div>
+
+// //         <div>
+// //           <label className="block text-sm font-medium">Description</label>
+// //           <textarea
+// //             value={formData.description}
+// //             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+// //             className="w-full border px-3 py-2 rounded"
+// //             rows={3}
+// //           />
+// //         </div>
+
+// //         <div>
+// //           <label className="block text-sm font-medium">Image URL</label>
+// //           <input
+// //             type="url"
+// //             value={formData.image_url}
+// //             onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+// //             className="w-full border px-3 py-2 rounded"
+// //           />
+// //         </div>
+
+// //         <div>
+// //           <label className="block text-sm font-medium">Cook Time (minutes)</label>
+// //           <input
+// //             type="number"
+// //             min={1}
+// //             value={formData.cook_time}
+// //             onChange={(e) => setFormData({ ...formData, cook_time: Number(e.target.value) })}
+// //             className="w-full border px-3 py-2 rounded"
+// //             required
+// //           />
+// //         </div>
+
+// //         <div>
+// //           <label className="block text-sm font-medium">Servings</label>
+// //           <input
+// //             type="number"
+// //             min={1}
+// //             value={formData.servings}
+// //             onChange={(e) => setFormData({ ...formData, servings: Number(e.target.value) })}
+// //             className="w-full border px-3 py-2 rounded"
+// //             required
+// //           />
+// //         </div>
+// //       </div>
+
+// //       <div className="space-y-4">
+// //         <div className="flex justify-between items-center">
+// //           <h2 className="text-xl font-bold">Ingredients</h2>
+// //           <button type="button" onClick={addIngredient} className="text-orange-500 hover:text-orange-700">
+// //             <Plus />
+// //           </button>
+// //         </div>
+
+// //         {formData.ingredients.map((ingredient, index) => (
+// //           <div key={index} className="flex gap-2 items-center">
+// //             <input
+// //               value={ingredient.name}
+// //               placeholder="Name"
+// //               onChange={(e) => updateIngredient(index, 'name', e.target.value)}
+// //               className="flex-1 border px-2 py-1 rounded"
+// //             />
+// //             <input
+// //               value={ingredient.amount}
+// //               placeholder="Amount"
+// //               onChange={(e) => updateIngredient(index, 'amount', e.target.value)}
+// //               className="w-24 border px-2 py-1 rounded"
+// //             />
+// //             <input
+// //               value={ingredient.unit}
+// //               placeholder="Unit"
+// //               onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
+// //               className="w-24 border px-2 py-1 rounded"
+// //             />
+// //             <button type="button" onClick={() => removeIngredient(index)} className="text-red-500">
+// //               <Minus />
+// //             </button>
+// //           </div>
+// //         ))}
+// //       </div>
+
+// //       <div className="space-y-4">
+// //         <div className="flex justify-between items-center">
+// //           <h2 className="text-xl font-bold">Instructions</h2>
+// //           <button type="button" onClick={addInstruction} className="text-orange-500 hover:text-orange-700">
+// //             <Plus />
+// //           </button>
+// //         </div>
+
+// //         {formData.instructions.map((instruction, index) => (
+// //           <div key={index} className="flex items-start gap-2">
+// //             <div className="w-6 pt-2">{instruction.step}.</div>
+// //             <textarea
+// //               value={instruction.text}
+// //               onChange={(e) => updateInstruction(index, e.target.value)}
+// //               className="flex-1 border px-2 py-1 rounded"
+// //             />
+// //             <button type="button" onClick={() => removeInstruction(index)} className="text-red-500">
+// //               <Minus />
+// //             </button>
+// //           </div>
+// //         ))}
+// //       </div>
+
+// //       <div>
+// //         <label className="block text-sm font-medium">Tags (comma-separated)</label>
+// //         <input
+// //           type="text"
+// //           value={formData.tags.join(', ')}
+// //           onChange={(e) =>
+// //             setFormData({ ...formData, tags: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean) })
+// //           }
+// //           className="w-full border px-3 py-2 rounded"
+// //         />
+// //       </div>
+
+// //       <div>
+// //         <label className="block text-sm font-medium">Status</label>
+// //         <select
+// //           value={formData.status}
+// //           onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+// //           className="w-full border px-3 py-2 rounded"
+// //         >
+// //           <option value="draft">Draft</option>
+// //           <option value="published">Published</option>
+// //           <option value="archived">Archived</option>
+// //         </select>
+// //       </div>
+
+// //       <div className="flex justify-end gap-3 mt-6">
+// //         {onCancel && (
+// //           <button
+// //             type="button"
+// //             onClick={onCancel}
+// //             className="px-4 py-2 border border-gray-300 rounded text-gray-700"
+// //           >
+// //             <X className="inline w-4 h-4 mr-1" />
+// //             Cancel
+// //           </button>
+// //         )}
+// //         <button
+// //           type="submit"
+// //           disabled={loading}
+// //           className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 disabled:opacity-50"
+// //         >
+// //           <Save className="inline w-4 h-4 mr-1" />
+// //           {loading ? 'Saving...' : 'Save Recipe'}
+// //         </button>
+// //       </div>
+// //     </form>
+// //   );
+// // };
+
+// // export default RecipeForm;
+// import React, { useState } from 'react';
+// import { useNavigate } from 'react-router-dom';
+// import { Plus, Minus, Save, X } from 'lucide-react';
+// import { supabase } from '../../lib/supabase';
+// import { Recipe } from '../../types';
+// import toast from 'react-hot-toast';
+
+// interface RecipeFormProps {
+//   initialData?: Partial<Recipe>;
+//   onSubmit?: (recipe: Recipe) => void;
+//   onCancel?: () => void;
+// }
+
+// const RecipeForm: React.FC<RecipeFormProps> = ({ initialData, onSubmit, onCancel }) => {
+//   const navigate = useNavigate();
+//   const [loading, setLoading] = useState(false);
+//   const [formData, setFormData] = useState({
+//     title: initialData?.title || '',
+//     description: initialData?.description || '',
+//     image_url: initialData?.image_url || '',
+//     cook_time: initialData?.cook_time || 30,
+//     servings: initialData?.servings || 4,
+//     ingredients: initialData?.ingredients || [{ name: '', amount: '', unit: '' }],
+//     instructions: initialData?.instructions || [{ step: 1, text: '' }],
+//     tags: initialData?.tags || [],
+//     status: initialData?.status || 'published',
+//     calories_level: initialData?.calories_level || '',
+//     meal_time: initialData?.meal_time || '',
+//     type: initialData?.type || '',
+//     rich_in: initialData?.rich_in || ''
+//   });
+
+//   const handleSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+//     setLoading(true);
+
+//     try {
+//       const { data: { user } } = await supabase.auth.getUser();
+//       if (!user) throw new Error('Not authenticated');
+
+//       const recipeData = {
+//         ...formData,
+//         chef_id: user.id,
+//         created_at: new Date().toISOString()
+//       };
+
+//       const { data, error } = await supabase
+//         .from('recipes')
+//         .upsert([
+//           initialData?.id
+//             ? { id: initialData.id, ...recipeData }
+//             : recipeData
+//         ])
+//         .select()
+//         .single();
+
+//       if (error) throw error;
+
+//       toast.success(initialData?.id ? 'Recipe updated successfully' : 'Recipe created successfully');
+
+//       if (onSubmit) onSubmit(data);
+//       navigate('/recipes');
+//     } catch (error) {
+//       console.error('Error saving recipe:', error);
+//       toast.error('Failed to save recipe');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const addIngredient = () => {
+//     setFormData(prev => ({
+//       ...prev,
+//       ingredients: [...prev.ingredients, { name: '', amount: '', unit: '' }]
+//     }));
+//   };
+
+//   const removeIngredient = (index: number) => {
+//     setFormData(prev => ({
+//       ...prev,
+//       ingredients: prev.ingredients.filter((_, i) => i !== index)
+//     }));
+//   };
+
+//   const updateIngredient = (index: number, field: string, value: string) => {
+//     setFormData(prev => ({
+//       ...prev,
+//       ingredients: prev.ingredients.map((ingredient, i) =>
+//         i === index ? { ...ingredient, [field]: value } : ingredient
+//       )
+//     }));
+//   };
+
+//   const addInstruction = () => {
+//     setFormData(prev => ({
+//       ...prev,
+//       instructions: [...prev.instructions, { step: prev.instructions.length + 1, text: '' }]
+//     }));
+//   };
+
+//   const removeInstruction = (index: number) => {
+//     setFormData(prev => ({
+//       ...prev,
+//       instructions: prev.instructions
+//         .filter((_, i) => i !== index)
+//         .map((instruction, i) => ({ ...instruction, step: i + 1 }))
+//     }));
+//   };
+
+//   const updateInstruction = (index: number, text: string) => {
+//     setFormData(prev => ({
+//       ...prev,
+//       instructions: prev.instructions.map((instruction, i) =>
+//         i === index ? { ...instruction, text } : instruction
+//       )
+//     }));
+//   };
+
+//   return (
+//     <form onSubmit={handleSubmit} className="space-y-8">
+//       <div className="space-y-4">
+//         <h2 className="text-xl font-bold">Basic Information</h2>
+
+//         <input
+//           type="text"
+//           placeholder="Title"
+//           value={formData.title}
+//           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+//           className="w-full border px-3 py-2 rounded"
+//           required
+//         />
+
+//         <textarea
+//           placeholder="Description"
+//           value={formData.description}
+//           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+//           className="w-full border px-3 py-2 rounded"
+//           rows={3}
+//         />
+
+//         <input
+//           type="url"
+//           placeholder="Image URL"
+//           value={formData.image_url}
+//           onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+//           className="w-full border px-3 py-2 rounded"
+//         />
+
+//         <input
+//           type="number"
+//           placeholder="Cook Time (minutes)"
+//           value={formData.cook_time}
+//           onChange={(e) => setFormData({ ...formData, cook_time: Number(e.target.value) })}
+//           className="w-full border px-3 py-2 rounded"
+//           required
+//         />
+
+//         <input
+//           type="number"
+//           placeholder="Servings"
+//           value={formData.servings}
+//           onChange={(e) => setFormData({ ...formData, servings: Number(e.target.value) })}
+//           className="w-full border px-3 py-2 rounded"
+//           required
+//         />
+
+//         {/* Filter Fields */}
+//         <select
+//           value={formData.calories_level}
+//           onChange={(e) => setFormData({ ...formData, calories_level: e.target.value })}
+//           className="w-full border px-3 py-2 rounded"
+//         >
+//           <option value="">Select Calories</option>
+//           <option value="Low">Low</option>
+//           <option value="Medium">Medium</option>
+//           <option value="High">High</option>
+//         </select>
+
+//         <select
+//           value={formData.meal_time}
+//           onChange={(e) => setFormData({ ...formData, meal_time: e.target.value })}
+//           className="w-full border px-3 py-2 rounded"
+//         >
+//           <option value="">Select Meal Time</option>
+//           <option value="Breakfast">Breakfast</option>
+//           <option value="Lunch">Lunch</option>
+//           <option value="Dinner">Dinner</option>
+//         </select>
+
+//         <select
+//           value={formData.type}
+//           onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+//           className="w-full border px-3 py-2 rounded"
+//         >
+//           <option value="">Select Type</option>
+//           <option value="Vegetarian">Vegetarian</option>
+//           <option value="Chicken">Chicken</option>
+//           <option value="Fish">Fish</option>
+//         </select>
+
+//         <select
+//           value={formData.rich_in}
+//           onChange={(e) => setFormData({ ...formData, rich_in: e.target.value })}
+//           className="w-full border px-3 py-2 rounded"
+//         >
+//           <option value="">Rich in Vitamin</option>
+//           <option value="Vitamin A">Vitamin A</option>
+//           <option value="Vitamin C">Vitamin C</option>
+//           <option value="Vitamin B12">Vitamin B12</option>
+//         </select>
+//       </div>
+
+//       {/* Ingredients Section */}
+//       <div className="space-y-4">
+//         <div className="flex justify-between items-center">
+//           <h2 className="text-xl font-bold">Ingredients</h2>
+//           <button type="button" onClick={addIngredient} className="text-orange-500 hover:text-orange-700">
+//             <Plus />
+//           </button>
+//         </div>
+
+//         {formData.ingredients.map((ingredient, index) => (
+//           <div key={index} className="flex gap-2 items-center">
+//             <input
+//               value={ingredient.name}
+//               placeholder="Name"
+//               onChange={(e) => updateIngredient(index, 'name', e.target.value)}
+//               className="flex-1 border px-2 py-1 rounded"
+//             />
+//             <input
+//               value={ingredient.amount}
+//               placeholder="Amount"
+//               onChange={(e) => updateIngredient(index, 'amount', e.target.value)}
+//               className="w-24 border px-2 py-1 rounded"
+//             />
+//             <input
+//               value={ingredient.unit}
+//               placeholder="Unit"
+//               onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
+//               className="w-24 border px-2 py-1 rounded"
+//             />
+//             <button type="button" onClick={() => removeIngredient(index)} className="text-red-500">
+//               <Minus />
+//             </button>
+//           </div>
+//         ))}
+//       </div>
+
+//       {/* Instructions Section */}
+//       <div className="space-y-4">
+//         <div className="flex justify-between items-center">
+//           <h2 className="text-xl font-bold">Instructions</h2>
+//           <button type="button" onClick={addInstruction} className="text-orange-500 hover:text-orange-700">
+//             <Plus />
+//           </button>
+//         </div>
+
+//         {formData.instructions.map((instruction, index) => (
+//           <div key={index} className="flex items-start gap-2">
+//             <div className="w-6 pt-2">{instruction.step}.</div>
+//             <textarea
+//               value={instruction.text}
+//               onChange={(e) => updateInstruction(index, e.target.value)}
+//               className="flex-1 border px-2 py-1 rounded"
+//             />
+//             <button type="button" onClick={() => removeInstruction(index)} className="text-red-500">
+//               <Minus />
+//             </button>
+//           </div>
+//         ))}
+//       </div>
+
+//       {/* Tags and Status */}
+//       <input
+//         type="text"
+//         placeholder="Tags (comma-separated)"
+//         value={formData.tags.join(', ')}
+//         onChange={(e) =>
+//           setFormData({
+//             ...formData,
+//             tags: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean)
+//           })
+//         }
+//         className="w-full border px-3 py-2 rounded"
+//       />
+
+//       <select
+//         value={formData.status}
+//         onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+//         className="w-full border px-3 py-2 rounded"
+//       >
+//         <option value="draft">Draft</option>
+//         <option value="published">Published</option>
+//         <option value="archived">Archived</option>
+//       </select>
+
+//       {/* Buttons */}
+//       <div className="flex justify-end gap-3 mt-6">
+//         {onCancel && (
+//           <button type="button" onClick={onCancel} className="px-4 py-2 border border-gray-300 rounded text-gray-700">
+//             <X className="inline w-4 h-4 mr-1" />
+//             Cancel
+//           </button>
+//         )}
+//         <button
+//           type="submit"
+//           disabled={loading}
+//           className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 disabled:opacity-50"
+//         >
+//           <Save className="inline w-4 h-4 mr-1" />
+//           {loading ? 'Saving...' : 'Save Recipe'}
+//         </button>
+//       </div>
+//     </form>
+//   );
+// };
+
+// export default RecipeForm;
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Minus, Save, X } from 'lucide-react';
@@ -11,11 +623,7 @@ interface RecipeFormProps {
   onCancel?: () => void;
 }
 
-const RecipeForm: React.FC<RecipeFormProps> = ({
-  initialData,
-  onSubmit,
-  onCancel
-}) => {
+const RecipeForm: React.FC<RecipeFormProps> = ({ initialData, onSubmit, onCancel }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -23,13 +631,15 @@ const RecipeForm: React.FC<RecipeFormProps> = ({
     description: initialData?.description || '',
     image_url: initialData?.image_url || '',
     cook_time: initialData?.cook_time || 30,
-    prep_time: initialData?.prep_time || 15,
     servings: initialData?.servings || 4,
-    difficulty: initialData?.difficulty || 'Medium',
     ingredients: initialData?.ingredients || [{ name: '', amount: '', unit: '' }],
     instructions: initialData?.instructions || [{ step: 1, text: '' }],
     tags: initialData?.tags || [],
-    status: initialData?.status || 'draft'
+    status: initialData?.status || 'published',
+    calories_level: initialData?.calories_level || '',
+    meal_time: initialData?.meal_time || '',
+    type: initialData?.type || '',
+    rich_in: initialData?.rich_in || ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,19 +652,14 @@ const RecipeForm: React.FC<RecipeFormProps> = ({
 
       const recipeData = {
         ...formData,
-        chef_id: user.id
+        chef_id: user.id,
+        created_at: new Date().toISOString()
       };
-
-          console.log('Submitting recipe data:', recipeData);
-
 
       const { data, error } = await supabase
         .from('recipes')
-        
         .upsert([
-          initialData?.id
-            ? { id: initialData.id, ...recipeData } // update
-            : recipeData // create
+          initialData?.id ? { id: initialData.id, ...recipeData } : recipeData
         ])
         .select()
         .single();
@@ -62,15 +667,12 @@ const RecipeForm: React.FC<RecipeFormProps> = ({
       if (error) throw error;
 
       toast.success(initialData?.id ? 'Recipe updated successfully' : 'Recipe created successfully');
-      
-      if (onSubmit) {
-        onSubmit(data);
-      } else {
-        navigate(`/recipes/${data.id}`);
-      }
-    } catch (error) {
-      console.error('Error saving recipe:', error);
-      toast.error('Failed to save recipe');
+
+      if (onSubmit) onSubmit(data);
+      navigate('/recipes');
+    } catch (error: any) {
+      console.error('Error saving recipe:', error.message || error);
+      toast.error(error.message || 'Failed to save recipe');
     } finally {
       setLoading(false);
     }
@@ -93,8 +695,8 @@ const RecipeForm: React.FC<RecipeFormProps> = ({
   const updateIngredient = (index: number, field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
-      ingredients: prev.ingredients.map((ingredient, i) =>
-        i === index ? { ...ingredient, [field]: value } : ingredient
+      ingredients: prev.ingredients.map((ing, i) =>
+        i === index ? { ...ing, [field]: value } : ing
       )
     }));
   };
@@ -102,10 +704,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({
   const addInstruction = () => {
     setFormData(prev => ({
       ...prev,
-      instructions: [
-        ...prev.instructions,
-        { step: prev.instructions.length + 1, text: '' }
-      ]
+      instructions: [...prev.instructions, { step: prev.instructions.length + 1, text: '' }]
     }));
   };
 
@@ -114,153 +713,145 @@ const RecipeForm: React.FC<RecipeFormProps> = ({
       ...prev,
       instructions: prev.instructions
         .filter((_, i) => i !== index)
-        .map((instruction, i) => ({ ...instruction, step: i + 1 }))
+        .map((inst, i) => ({ ...inst, step: i + 1 }))
     }));
   };
 
   const updateInstruction = (index: number, text: string) => {
     setFormData(prev => ({
       ...prev,
-      instructions: prev.instructions.map((instruction, i) =>
-        i === index ? { ...instruction, text } : instruction
+      instructions: prev.instructions.map((inst, i) =>
+        i === index ? { ...inst, text } : inst
       )
     }));
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Basic Information */}
+      {/* Basic Info */}
       <div className="space-y-4">
         <h2 className="text-xl font-bold">Basic Information</h2>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Title</label>
-          <input
-            type="text"
-            value={formData.title}
-            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-            required
-          />
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Description</label>
-          <textarea
-            value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-            rows={3}
-          />
-        </div>
+        <input
+          type="text"
+          placeholder="Title"
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          className="w-full border px-3 py-2 rounded"
+          required
+        />
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Image URL</label>
-          <input
-            type="url"
-            value={formData.image_url}
-            onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-          />
-        </div>
+        <textarea
+          placeholder="Description"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          className="w-full border px-3 py-2 rounded"
+          rows={3}
+        />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Preparation Time (minutes)</label>
-            <input
-              type="number"
-              value={formData.prep_time}
-              onChange={(e) => setFormData(prev => ({ ...prev, prep_time: parseInt(e.target.value) }))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-              min="0"
-            />
-          </div>
+        <input
+          type="url"
+          placeholder="Image URL"
+          value={formData.image_url}
+          onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+          className="w-full border px-3 py-2 rounded"
+        />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Cooking Time (minutes)</label>
-            <input
-              type="number"
-              value={formData.cook_time}
-              onChange={(e) => setFormData(prev => ({ ...prev, cook_time: parseInt(e.target.value) }))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-              min="0"
-            />
-          </div>
+        <input
+          type="number"
+          placeholder="Cook Time (minutes)"
+          value={formData.cook_time}
+          onChange={(e) => setFormData({ ...formData, cook_time: Number(e.target.value) })}
+          className="w-full border px-3 py-2 rounded"
+          required
+        />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Servings</label>
-            <input
-              type="number"
-              value={formData.servings}
-              onChange={(e) => setFormData(prev => ({ ...prev, servings: parseInt(e.target.value) }))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-              min="1"
-            />
-          </div>
-        </div>
+        <input
+          type="number"
+          placeholder="Servings"
+          value={formData.servings}
+          onChange={(e) => setFormData({ ...formData, servings: Number(e.target.value) })}
+          className="w-full border px-3 py-2 rounded"
+          required
+        />
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Difficulty</label>
-          <select
-            value={formData.difficulty}
-            onChange={(e) => setFormData(prev => ({ ...prev, difficulty: e.target.value }))}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-          >
-            <option value="Easy">Easy</option>
-            <option value="Medium">Medium</option>
-            <option value="Hard">Hard</option>
-          </select>
-        </div>
+        {/* Filter Fields */}
+        <select
+          value={formData.calories_level}
+          onChange={(e) => setFormData({ ...formData, calories_level: e.target.value })}
+          className="w-full border px-3 py-2 rounded"
+        >
+          <option value="">Select Calories</option>
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+        </select>
+
+        <select
+          value={formData.meal_time}
+          onChange={(e) => setFormData({ ...formData, meal_time: e.target.value })}
+          className="w-full border px-3 py-2 rounded"
+        >
+          <option value="">Select Meal Time</option>
+          <option value="Breakfast">Breakfast</option>
+          <option value="Lunch">Lunch</option>
+          <option value="Dinner">Dinner</option>
+        </select>
+
+        <select
+          value={formData.type}
+          onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+          className="w-full border px-3 py-2 rounded"
+        >
+          <option value="">Select Type</option>
+          <option value="Vegetarian">Vegetarian</option>
+          <option value="Chicken">Chicken</option>
+          <option value="Fish">Fish</option>
+        </select>
+
+        <select
+          value={formData.rich_in}
+          onChange={(e) => setFormData({ ...formData, rich_in: e.target.value })}
+          className="w-full border px-3 py-2 rounded"
+        >
+          <option value="">Rich in Vitamin</option>
+          <option value="Vitamin A">Vitamin A</option>
+          <option value="Vitamin C">Vitamin C</option>
+          <option value="Vitamin B12">Vitamin B12</option>
+        </select>
       </div>
 
       {/* Ingredients */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold">Ingredients</h2>
-          <button
-            type="button"
-            onClick={addIngredient}
-            className="text-orange-500 hover:text-orange-600"
-          >
-            <Plus className="w-5 h-5" />
+          <button type="button" onClick={addIngredient} className="text-orange-500 hover:text-orange-700">
+            <Plus />
           </button>
         </div>
 
         {formData.ingredients.map((ingredient, index) => (
-          <div key={index} className="flex gap-4 items-start">
-            <div className="flex-1">
-              <input
-                type="text"
-                value={ingredient.name}
-                onChange={(e) => updateIngredient(index, 'name', e.target.value)}
-                placeholder="Ingredient name"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-              />
-            </div>
-            <div className="w-24">
-              <input
-                type="text"
-                value={ingredient.amount}
-                onChange={(e) => updateIngredient(index, 'amount', e.target.value)}
-                placeholder="Amount"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-              />
-            </div>
-            <div className="w-24">
-              <input
-                type="text"
-                value={ingredient.unit}
-                onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
-                placeholder="Unit"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => removeIngredient(index)}
-              className="mt-1 text-red-500 hover:text-red-600"
-            >
-              <Minus className="w-5 h-5" />
+          <div key={index} className="flex gap-2 items-center">
+            <input
+              value={ingredient.name}
+              placeholder="Name"
+              onChange={(e) => updateIngredient(index, 'name', e.target.value)}
+              className="flex-1 border px-2 py-1 rounded"
+            />
+            <input
+              value={ingredient.amount}
+              placeholder="Amount"
+              onChange={(e) => updateIngredient(index, 'amount', e.target.value)}
+              className="w-24 border px-2 py-1 rounded"
+            />
+            <input
+              value={ingredient.unit}
+              placeholder="Unit"
+              onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
+              className="w-24 border px-2 py-1 rounded"
+            />
+            <button type="button" onClick={() => removeIngredient(index)} className="text-red-500">
+              <Minus />
             </button>
           </div>
         ))}
@@ -270,87 +861,64 @@ const RecipeForm: React.FC<RecipeFormProps> = ({
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold">Instructions</h2>
-          <button
-            type="button"
-            onClick={addInstruction}
-            className="text-orange-500 hover:text-orange-600"
-          >
-            <Plus className="w-5 h-5" />
+          <button type="button" onClick={addInstruction} className="text-orange-500 hover:text-orange-700">
+            <Plus />
           </button>
         </div>
 
         {formData.instructions.map((instruction, index) => (
-          <div key={index} className="flex gap-4 items-start">
-            <div className="w-12 flex-shrink-0 pt-3 text-center">
-              {instruction.step}.
-            </div>
-            <div className="flex-1">
-              <textarea
-                value={instruction.text}
-                onChange={(e) => updateInstruction(index, e.target.value)}
-                placeholder="Instruction step"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-                rows={2}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => removeInstruction(index)}
-              className="mt-1 text-red-500 hover:text-red-600"
-            >
-              <Minus className="w-5 h-5" />
+          <div key={index} className="flex items-start gap-2">
+            <div className="w-6 pt-2">{instruction.step}.</div>
+            <textarea
+              value={instruction.text}
+              onChange={(e) => updateInstruction(index, e.target.value)}
+              className="flex-1 border px-2 py-1 rounded"
+            />
+            <button type="button" onClick={() => removeInstruction(index)} className="text-red-500">
+              <Minus />
             </button>
           </div>
         ))}
       </div>
 
-      {/* Tags */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Tags (comma-separated)</label>
-        <input
-          type="text"
-          value={formData.tags.join(', ')}
-          onChange={(e) => setFormData(prev => ({
-            ...prev,
+      {/* Tags & Status */}
+      <input
+        type="text"
+        placeholder="Tags (comma-separated)"
+        value={formData.tags.join(', ')}
+        onChange={(e) =>
+          setFormData({
+            ...formData,
             tags: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean)
-          }))}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-          placeholder="e.g., Italian, Vegetarian, Quick"
-        />
-      </div>
+          })
+        }
+        className="w-full border px-3 py-2 rounded"
+      />
 
-      {/* Status */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Status</label>
-        <select
-          value={formData.status}
-          onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-        >
-          <option value="draft">Draft</option>
-          <option value="published">Published</option>
-          <option value="archived">Archived</option>
-        </select>
-      </div>
+      <select
+        value={formData.status}
+        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+        className="w-full border px-3 py-2 rounded"
+      >
+        <option value="draft">Draft</option>
+        <option value="published">Published</option>
+        <option value="archived">Archived</option>
+      </select>
 
-      {/* Form Actions */}
-      <div className="flex justify-end gap-4">
+      {/* Submit Buttons */}
+      <div className="flex justify-end gap-3 mt-6">
         {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-          >
-            <X className="w-5 h-5 inline-block mr-2" />
+          <button type="button" onClick={onCancel} className="px-4 py-2 border border-gray-300 rounded text-gray-700">
+            <X className="inline w-4 h-4 mr-1" />
             Cancel
           </button>
         )}
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:opacity-50"
+          className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 disabled:opacity-50"
         >
-          <Save className="w-5 h-5 inline-block mr-2" />
+          <Save className="inline w-4 h-4 mr-1" />
           {loading ? 'Saving...' : 'Save Recipe'}
         </button>
       </div>

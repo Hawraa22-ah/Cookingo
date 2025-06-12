@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, ChefHat, User } from 'lucide-react';
+import { Menu, X, ChefHat } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import AuthButtons from '../auth/AuthButtons';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isChef, setIsChef] = useState(false);
   const location = useLocation();
+  const { user } = useAuth(); // ✅ use context instead of calling supabase.auth.getUser()
 
   useEffect(() => {
     const handleScroll = () => {
       const offset = window.scrollY;
       setScrolled(offset > 50);
     };
-
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -26,21 +27,21 @@ const Header: React.FC = () => {
 
   useEffect(() => {
     const checkChefStatus = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
+      if (user?.id) {
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .single();
         
-        setIsChef(profile?.role === 'chef');
+        if (!error) {
+          setIsChef(profile?.role === 'chef');
+        }
       }
     };
 
     checkChefStatus();
-  }, []);
-
+  }, [user]);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -74,15 +75,9 @@ const Header: React.FC = () => {
             }`}>
               Daily Dishes
             </Link>
-
-            <Link
-  to="/products"
-  className="text-gray-700 hover:text-orange-500 transition font-medium"
->
-  Products
-</Link>
-
-
+            <Link to="/products" className="text-lg font-medium text-gray-700 hover:text-orange-500 transition-colors">
+              Products
+            </Link>
             {isChef && (
               <Link to="/chef/dashboard" className={`text-lg font-medium hover:text-orange-500 transition-colors ${
                 location.pathname.includes('/chef/dashboard') ? 'text-orange-500' : 'text-gray-700'
@@ -93,7 +88,7 @@ const Header: React.FC = () => {
             <AuthButtons />
           </nav>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Toggle */}
           <button 
             onClick={toggleMenu}
             className="md:hidden text-gray-700 focus:outline-none"

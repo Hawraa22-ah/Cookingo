@@ -17,6 +17,8 @@ import SellerDashboard from './pages/seller/SellerDashboard';
 import ProductsPage from './pages/ProductsPage';
 import SettingsPage from './pages/SettingsPage';
 import SavedRecipes from './components/recipes/SavedRecipes';
+import AdminDashboard from './pages/AdminDashboard';
+
 
 function App() {
   return (
@@ -38,6 +40,7 @@ function App() {
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/saved-recipes" element={<SavedRecipes />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>

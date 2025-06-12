@@ -8,41 +8,45 @@ interface DishFormProps {
 }
 
 const DishForm: React.FC<DishFormProps> = ({ onSubmit, onCancel }) => {
-  const [title, setTitle] = useState('');
+  const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [servings, setServings] = useState('');
   const [time, setTime] = useState('');
   const [difficulty, setDifficulty] = useState('');
-  const [imagePath, setImagePath] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!title || !description || !price) {
+    if (!name || !description || !price) {
       toast.error('Please fill in all required fields.');
       return;
     }
 
-    const user = await supabase.auth.getUser();
-    const chef_id = user.data?.user?.id;
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      toast.error('You must be logged in to add a dish.');
+      return;
+    }
 
     const { error } = await supabase.from('dishes').insert([
       {
-        title,
+        name,
         description,
         price: parseFloat(price),
         servings: servings ? parseInt(servings) : null,
         time: time ? parseInt(time) : null,
         difficulty: difficulty || null,
-        image_path: imagePath, // You paste the URL here
-        chef_id,
-        status: 'published',
+        image_url: imageUrl,
+        chef_id: user.id,
+        created_at: new Date().toISOString(),
+        status: 'published'
       }
     ]);
 
     if (error) {
-      console.error('Failed to add dish:', error);
+      console.error('Insert Error:', error);
       toast.error('Could not add dish.');
     } else {
       toast.success('Dish added!');
@@ -51,70 +55,75 @@ const DishForm: React.FC<DishFormProps> = ({ onSubmit, onCancel }) => {
   };
 
   return (
-    <form onSubmit={handleFormSubmit}>
+    <form onSubmit={handleFormSubmit} className="space-y-4">
       <input
         type="text"
-        placeholder="Dish Title"
-        className="w-full mb-3 p-2 border rounded"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Dish Name"
+        className="w-full p-2 border rounded"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
         required
       />
+
       <textarea
-        placeholder="Dish Description"
-        className="w-full mb-3 p-2 border rounded"
+        placeholder="Description"
+        className="w-full p-2 border rounded"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         required
       />
+
       <input
         type="number"
         placeholder="Price"
-        className="w-full mb-3 p-2 border rounded"
+        className="w-full p-2 border rounded"
         value={price}
         onChange={(e) => setPrice(e.target.value)}
         required
       />
+
       <input
         type="number"
-        placeholder="Servings (optional)"
-        className="w-full mb-3 p-2 border rounded"
+        placeholder="Servings"
+        className="w-full p-2 border rounded"
         value={servings}
         onChange={(e) => setServings(e.target.value)}
       />
+
       <input
         type="number"
         placeholder="Time (minutes)"
-        className="w-full mb-3 p-2 border rounded"
+        className="w-full p-2 border rounded"
         value={time}
         onChange={(e) => setTime(e.target.value)}
       />
+
       <input
         type="text"
-        placeholder="Difficulty (e.g., Easy, Medium, Hard)"
-        className="w-full mb-3 p-2 border rounded"
+        placeholder="Difficulty (Easy, Medium, Hard)"
+        className="w-full p-2 border rounded"
         value={difficulty}
         onChange={(e) => setDifficulty(e.target.value)}
       />
 
-      <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+      <label className="block text-sm font-medium text-gray-700">Image URL</label>
       <input
         type="text"
-        placeholder="Paste public image URL from Supabase"
-        className="w-full mb-4 p-2 border rounded"
-        value={imagePath}
-        onChange={(e) => setImagePath(e.target.value)}
+        placeholder="Paste image URL"
+        className="w-full p-2 border rounded"
+        value={imageUrl}
+        onChange={(e) => setImageUrl(e.target.value)}
       />
 
-      {imagePath && (
+      {imageUrl && (
         <img
-          src={imagePath}
+          src={imageUrl}
           alt="Preview"
-          className="w-full h-48 object-cover rounded mb-4"
+          className="w-full h-48 object-cover rounded"
         />
       )}
 
-      <div className="flex gap-2 justify-end">
+      <div className="flex justify-end gap-3 pt-2">
         <button
           type="button"
           onClick={onCancel}

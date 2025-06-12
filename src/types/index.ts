@@ -15,6 +15,9 @@ export interface Recipe {
   isFavorite?: boolean;
   servings?: number;
   difficulty?: string;
+  // avg_rating?: number;
+  avg_rating?: number | null; // make sure this is added
+
 
 }
 

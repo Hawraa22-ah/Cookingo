@@ -22,9 +22,20 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
           alt={recipe.title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
+        
+
         <div className="absolute top-3 right-3 bg-white rounded-full py-1 px-2 flex items-center shadow-md">
           <span className="text-yellow-500 mr-1">★</span>
-          <span className="text-sm font-medium">{averageRating}</span>
+          {/* <span className="text-sm font-medium">{averageRating}</span> */}
+          <span className="text-sm font-medium">
+            {/* {typeof averageRating === 'number' && !isNaN(averageRating)
+              ? averageRating.toFixed(1)
+              : '0.0'} */}
+            {typeof recipe.avg_rating === 'number' && !isNaN(recipe.avg_rating)
+      ? recipe.avg_rating.toFixed(1)
+      : '0.0'}
+
+          </span>
         </div>
       </div>
       
@@ -46,6 +57,9 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
         
         <p className="text-gray-600 text-sm mb-4 line-clamp-2">
           {recipe.description}
+        </p>
+        <p className="text-sm text-gray-500">
+          By: {recipe.chef?.username || 'Unknown Chef'}
         </p>
         
         <div className="flex items-center justify-between text-sm text-gray-500">

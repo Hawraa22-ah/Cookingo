@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Users, ChefHat, Star, ShoppingBag } from 'lucide-react';
+import { Clock, Users, ChefHat, ShoppingBag } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Dish, DailyDishOrder } from '../types';
-import { formatTime, calculateAverageRating } from '../utils/helpers';
+import { formatTime } from '../utils/helpers';
 import OrderDishModal from '../components/daily-dish/OrderDishModal';
 import toast from 'react-hot-toast';
 
@@ -19,28 +19,28 @@ const DailyDishPage: React.FC = () => {
     if (user) loadUserOrders();
   }, [user]);
 
-  const getPublicImageUrl = (path: string): string => {
-    const { data } = supabase.storage.from('dish-images').getPublicUrl(path);
-    return data?.publicUrl || '';
-  };
-
   const loadDailyDishes = async () => {
     try {
       const { data, error } = await supabase
         .from('dishes')
-        .select('*')
-        .eq('status', 'published')
+        .select(`
+          *,
+          chef:profiles!dishes_chef_id_fkey (
+            id,
+            username
+          )
+        `)
         .order('created_at', { ascending: false })
         .limit(5);
 
       if (error) throw error;
 
-      const dishesWithUrls = (data || []).map(dish => ({
+      const formatted = data.map(dish => ({
         ...dish,
-        image_url: dish.image_url || (dish.image_path ? getPublicImageUrl(dish.image_path) : '')
+        title: dish.name // Just for display
       }));
 
-      setDishes(dishesWithUrls);
+      setDishes(formatted);
     } catch (error) {
       console.error('Error loading daily dishes:', error);
       toast.error('Failed to load daily dishes');
@@ -58,18 +58,7 @@ const DailyDishPage: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      const ordersWithUrls = (data || []).map(order => ({
-        ...order,
-        dish: order.dish
-          ? {
-              ...order.dish,
-              image_url: order.dish.image_url || (order.dish.image_path ? getPublicImageUrl(order.dish.image_path) : '')
-            }
-          : null
-      }));
-
-      setOrders(ordersWithUrls);
+      setOrders(data || []);
     } catch (error) {
       console.error('Error loading user orders:', error);
       toast.error('Failed to load your orders');
@@ -89,33 +78,47 @@ const DailyDishPage: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-16">
-      <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-8 font-serif">
-        Daily Dishes
-      </h1>
+    <div className="relative">
+      {/* Background Layer */}
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-10 z-[-1]"
+        style={{
+          backgroundImage:
+            "url('https://images.pexels.com/photos/1640773/pexels-photo-1640773.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')",
+        }}
+      />
 
-      <div className="space-y-16">
-        {dishes.map((dish) => {
-          const averageRating = calculateAverageRating(dish.rating ? [dish.rating] : []);
+      {/* Foreground Content */}
+      <div className="container mx-auto px-4 py-16 relative z-10">
+        <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-8 font-serif">
+          Daily Dishes
+        </h1>
 
-          return (
-            <div key={dish.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all">
+        <div className="space-y-16">
+          {dishes.map((dish) => (
+            <div
+              key={dish.id}
+              className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all"
+            >
               <div className="flex flex-col lg:flex-row">
-                <div className="lg:w-1/2 relative">
+                <div className="lg:w-1/2">
                   <img
                     src={dish.image_url}
                     alt={dish.title}
                     className="w-full h-full object-cover"
                   />
-                  
                 </div>
 
                 <div className="lg:w-1/2 p-8">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-1 font-serif">{dish.title}</h2>
-                  <p className="text-sm text-gray-500 mb-4">By: {dish.chef_name || 'Unknown Chef'}</p>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-1 font-serif">
+                    {dish.title}
+                  </h2>
+                  <p className="text-sm text-gray-500 mb-4">
+                    By: {dish.chef?.username || 'Unknown Chef'}
+                  </p>
                   <p className="text-gray-600 mb-6">{dish.description}</p>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div className="text-center p-3 bg-gray-50 rounded-lg">
                       <Clock className="w-5 h-5 mx-auto mb-1 text-orange-500" />
                       <span className="text-sm text-gray-600">
@@ -136,17 +139,9 @@ const DailyDishPage: React.FC = () => {
                     </div>
                     <div className="text-center p-3 bg-gray-50 rounded-lg">
                       <ShoppingBag className="w-5 h-5 mx-auto mb-1 text-orange-500" />
-                      <span className="text-sm text-gray-600">${dish.price}</span>
-                    </div>
-                  </div>
-
-                  <div className="mb-6">
-                    <div className="flex flex-wrap gap-2">
-                      {dish.tags?.map((tag, index) => (
-                        <span key={index} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
-                          {tag}
-                        </span>
-                      ))}
+                      <span className="text-sm text-gray-600">
+                        ${dish.price?.toFixed(2) || '0.00'}
+                      </span>
                     </div>
                   </div>
 
@@ -159,17 +154,17 @@ const DailyDishPage: React.FC = () => {
                 </div>
               </div>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
 
-      {selectedDish && (
-        <OrderDishModal
-          dish={selectedDish}
-          onClose={() => setSelectedDish(null)}
-          onOrderComplete={handleOrderComplete}
-        />
-      )}
+        {selectedDish && (
+          <OrderDishModal
+            dish={selectedDish}
+            onClose={() => setSelectedDish(null)}
+            onOrderComplete={handleOrderComplete}
+          />
+        )}
+      </div>
     </div>
   );
 };
