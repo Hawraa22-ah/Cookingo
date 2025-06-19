@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Check, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
@@ -16,9 +17,11 @@ const ShoppingList: React.FC<ShoppingListProps> = ({ listId, onDelete }) => {
 
   useEffect(() => {
     loadShoppingList();
+    // eslint-disable-next-line
   }, [listId]);
 
   const loadShoppingList = async () => {
+    setLoading(true);
     try {
       const { data: listData, error: listError } = await supabase
         .from('shopping_lists')
@@ -46,20 +49,13 @@ const ShoppingList: React.FC<ShoppingListProps> = ({ listId, onDelete }) => {
     try {
       const { data, error } = await supabase
         .from('shopping_list_items')
-        .insert([{
-          list_id: listId,
-          ...newItem
-        }])
+        .insert([{ list_id: listId, ...newItem }])
         .select()
         .single();
 
       if (error) throw error;
 
-      setList(prev => prev ? {
-        ...prev,
-        items: [...(prev.items || []), data]
-      } : null);
-      
+      setList(prev => prev ? { ...prev, items: [...(prev.items || []), data] } : null);
       setNewItem({ ingredient: '', amount: '', unit: '' });
     } catch (error) {
       console.error('Error adding item:', error);
@@ -117,7 +113,7 @@ const ShoppingList: React.FC<ShoppingListProps> = ({ listId, onDelete }) => {
         .eq('id', listId);
 
       if (error) throw error;
-      
+
       toast.success('Shopping list deleted');
       onDelete?.();
     } catch (error) {
@@ -126,13 +122,8 @@ const ShoppingList: React.FC<ShoppingListProps> = ({ listId, onDelete }) => {
     }
   };
 
-  if (loading) {
-    return <div>Loading shopping list...</div>;
-  }
-
-  if (!list) {
-    return <div>Shopping list not found</div>;
-  }
+  if (loading) return <div>Loading shopping list...</div>;
+  if (!list) return <div>Shopping list not found</div>;
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -179,7 +170,7 @@ const ShoppingList: React.FC<ShoppingListProps> = ({ listId, onDelete }) => {
       </form>
 
       <ul className="space-y-2">
-        {list.items?.map((item) => (
+        {list.items?.map((item: ShoppingListItem) => (
           <li
             key={item.id}
             className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg"
@@ -214,7 +205,7 @@ const ShoppingList: React.FC<ShoppingListProps> = ({ listId, onDelete }) => {
         ))}
       </ul>
 
-      {list.items?.length === 0 && (
+      {(!list.items || list.items.length === 0) && (
         <p className="text-center text-gray-500 py-4">
           No items in this list yet
         </p>

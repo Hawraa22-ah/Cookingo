@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Layout from './components/layout/Layout';
@@ -12,19 +12,53 @@ import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import ChefDashboardPage from './pages/ChefDashboardPage';
 import NotFoundPage from './pages/NotFoundPage';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';  // ← import useAuth
 import SellerDashboard from './pages/seller/SellerDashboard';
 import ProductsPage from './pages/ProductsPage';
 import SettingsPage from './pages/SettingsPage';
 import SavedRecipes from './components/recipes/SavedRecipes';
 import AdminDashboard from './pages/AdminDashboard';
+import Donation from './pages/Donation';
+import OccasionsPage from './pages/OccasionsPage';
+import AnnouncementsPage from './pages/AnnouncementsPage';
+import NotificationsPage from './pages/NotificationsPage';
 
+function ChatWidgetLoader() {
+  const { user } = useAuth();
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;                // ← only load script if logged in
+    if (document.querySelector('script[data-df]')) {
+      setReady(true);
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = 'https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1';
+    s.async = true;
+    s.setAttribute('data-df', 'true');
+    s.onload = () => setReady(true);
+    document.head.appendChild(s);
+  }, [user]);
+
+  if (!user || !ready) return null;
+
+  return (
+    <df-messenger
+      intent="WELCOME"
+      chat-title="chef-chat"
+      agent-id="f50305c3-a6c0-4e59-8b51-8b454dfe513a"
+      language-code="en"
+    ></df-messenger>
+  );
+}
 
 function App() {
   return (
     <Router>
       <AuthProvider>
         <Toaster position="top-right" />
+
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<HomePage />} />
@@ -41,13 +75,19 @@ function App() {
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/saved-recipes" element={<SavedRecipes />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/occasions" element={<OccasionsPage />} />
+            <Route path="/donation" element={<Donation />} />
+            <Route path="/profile/announcements" element={<AnnouncementsPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
+
+        {/* Only logged-in users get the chat widget */}
+        <ChatWidgetLoader />
       </AuthProvider>
     </Router>
   );
 }
 
 export default App;
-

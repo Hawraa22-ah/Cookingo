@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState([]);
-  const [user, setUser] = useState(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [user, setUser] = useState<any>(null);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [categoryFilter, setCategoryFilter] = useState('all');
   const navigate = useNavigate();
@@ -42,19 +42,22 @@ export default function ProductsPage() {
     setUser(data?.user || null);
   };
 
-  const addToCart = async (productId: string) => {
+  const addToCart = async (product: any) => {
     if (!user) {
       toast.error('Please log in or register to add products to your cart.');
       return;
     }
 
-    const quantity = quantities[productId] || 1;
+    const quantity = quantities[product.id] || 1;
 
     const { error } = await supabase.from('shopping_cart').insert([
       {
-        user_id: user.id,
-        product_id: productId,
+        user_id:    user.id,
+        product_id: product.id,
         quantity,
+        seller_id:  product.seller_id,
+        unit_price: product.price,
+        status:     'pending',
       },
     ]);
 
@@ -72,7 +75,13 @@ export default function ProductsPage() {
       : products.filter((p) => p.category?.toLowerCase() === categoryFilter);
 
   return (
-    <div className="relative">
+    <div className="relative min-h-screen">
+      {/* Full-page background image */}
+      <img
+        src="https://fnsharp.com/cdn/shop/articles/greek-cooking-tools-featured_850x.jpg?v=1617738818"
+        alt="Kitchen tools background"
+        className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none z-0"
+      />
 
       {/* Foreground content */}
       <div className="container mx-auto px-4 py-8 relative z-10">
@@ -136,10 +145,8 @@ export default function ProductsPage() {
                     />
                   </div>
                   <button
-                    onClick={() => addToCart(product.id)}
-                    className={`${
-                      user ? 'bg-orange-500 hover:bg-orange-600' : 'bg-gray-300 text-gray-700'
-                    } text-white text-sm py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed`}
+                    onClick={() => addToCart(product)}
+                    className={`${user ? 'bg-orange-500 hover:bg-orange-600' : 'bg-gray-300 text-gray-700'} text-white text-sm py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     {user ? 'Add to Cart' : 'Register to Add'}
                   </button>

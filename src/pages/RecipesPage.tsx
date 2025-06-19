@@ -116,6 +116,11 @@ const RecipesPage: React.FC = () => {
     };
 
     fetchRecipes();
+
+    const handleUpdate = () => fetchRecipes();
+    window.addEventListener('recipes-updated', handleUpdate);
+    return () => window.removeEventListener('recipes-updated', handleUpdate);
+
   }, [queryParam, difficulty, cuisine, timeOfDay, type, vitamin, calories]);
 
   const updateSearchParams = () => {
