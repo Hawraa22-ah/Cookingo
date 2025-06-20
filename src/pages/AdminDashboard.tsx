@@ -1,3 +1,331 @@
+
+// import React, { useEffect, useState } from 'react';
+// import { supabase } from '../lib/supabase';
+// import {
+//   PieChart,
+//   Pie,
+//   Cell,
+//   Tooltip as ReTooltip,
+//   ResponsiveContainer,
+//   BarChart,
+//   Bar,
+//   XAxis,
+//   YAxis,
+//   CartesianGrid,
+//   Legend,
+//   LineChart,
+//   Line,
+//   ScatterChart,
+//   Scatter
+// } from 'recharts';
+// import { Bell as BellIcon } from 'lucide-react';
+
+// const HIGH_PRICE_LIMIT = 100;
+// const COLORS = ['#f97316', '#10b981', '#D2B48C'];
+
+// interface Recipe {
+//   id: number;
+//   title: string;
+//   avg_rating: number;
+//   meal_time: string | null;
+//   calories_level: string | null;
+// }
+
+// interface SellerProduct {
+//   id: number;
+//   name: string;
+//   price: number;
+//   seller_id: string;
+// }
+
+// interface FavoriteStat {
+//   recipe_id: string;
+//   value: number;
+// }
+
+// const AdminDashboard: React.FC = () => {
+//   // Stats state
+//   const [totalUsers, setTotalUsers] = useState(0);
+//   const [totalChefs, setTotalChefs] = useState(0);
+//   const [totalSellers, setTotalSellers] = useState(0);
+//   const [totalAdmins, setTotalAdmins] = useState(0);
+//   const [totalDonations, setTotalDonations] = useState(0);
+//   const [totalOccasions, setTotalOccasions] = useState(0);
+
+//   // Data lists
+//   const [lowRatedRecipes, setLowRatedRecipes] = useState<Recipe[]>([]);
+//   const [highPriceProducts, setHighPriceProducts] = useState<SellerProduct[]>([]);
+//   const [donationBeneficiaryStats, setDonationBeneficiaryStats] = useState<any[]>([]);
+//   const [occasionTypes, setOccasionTypes] = useState<any[]>([]);
+//   const [categoryStats, setCategoryStats] = useState<{ name: string; value: number }[]>([]);
+//   const [favoritesStats, setFavoritesStats] = useState<FavoriteStat[]>([]);
+
+//   // Announcement form state
+//   const [newTitle, setNewTitle] = useState('');
+//   const [newMessage, setNewMessage] = useState('');
+//   const [newLink, setNewLink] = useState('');
+//   const [adding, setAdding] = useState(false);
+
+//   // Map raw beneficiary codes to friendly labels
+//   const BENEFICIARY_LABELS: Record<string, string> = {
+//     street: 'Poor people on the street',
+//     orphans: 'Orphans',
+//     nursing: 'Nursing home',
+//   };
+
+//   useEffect(() => {
+//     // 1) Role counts
+//     (async () => {
+//       const { data, error } = await supabase.from('profiles').select('role');
+//       if (error) return console.error(error.message);
+//       let u = 0, c = 0, s = 0, a = 0;
+//       data!.forEach(r => {
+//         const role = r.role?.toLowerCase().trim();
+//         if (role === 'user') u++;
+//         else if (role === 'chef') c++;
+//         else if (role === 'seller') s++;
+//         else if (role === 'admin') a++;
+//       });
+//       setTotalUsers(u);
+//       setTotalChefs(c);
+//       setTotalSellers(s);
+//       setTotalAdmins(a);
+//     })();
+
+//     // 2) Low-rated recipes
+//     (async () => {
+//       const { data, error } = await supabase
+//         .from('recipes')
+//         .select('id, title, avg_rating, meal_time, calories_level')
+//         .lte('avg_rating', 2.5);
+//       if (!error && data) setLowRatedRecipes(data as Recipe[]);
+//     })();
+
+//     // 3) High-price products
+//     (async () => {
+//       const { data, error } = await supabase
+//         .from('seller_products')
+//         .select('id, name, price, seller_id')
+//         .gt('price', HIGH_PRICE_LIMIT);
+//       if (!error && data) setHighPriceProducts(data as SellerProduct[]);
+//     })();
+
+//     // 4) Donations: total + group by beneficiary
+//     (async () => {
+//       const { data, count, error } = await supabase
+//         .from('donations')
+//         .select('beneficiary', { count: 'exact' });
+//       if (!error && data) {
+//         setTotalDonations(count ?? 0);
+//         const tally: Record<string, number> = {};
+//         data.forEach(d => {
+//           if (!d.beneficiary) return;
+//           tally[d.beneficiary] = (tally[d.beneficiary] || 0) + 1;
+//         });
+//         setDonationBeneficiaryStats(
+//           Object.entries(tally).map(([code, val]) => ({
+//             name: BENEFICIARY_LABELS[code] || code,
+//             value: val
+//           }))
+//         );
+//       }
+//     })();
+
+//     // 5) Occasions by Type
+//     (async () => {
+//       const { data, count, error } = await supabase
+//         .from('custom_requests')
+//         .select('occasion', { count: 'exact' });
+//       if (!error && data) {
+//         setTotalOccasions(count ?? 0);
+//         const tally: Record<string, number> = {};
+//         data.forEach(r => {
+//           if (!r.occasion) return;
+//           tally[r.occasion] = (tally[r.occasion] || 0) + 1;
+//         });
+//         setOccasionTypes(
+//           Object.entries(tally).map(([type, val]) => ({ name: type, value: val }))
+//         );
+//       }
+//     })();
+
+//     // 6) Products by Category
+//     (async () => {
+//       const { data, error } = await supabase
+//         .from('seller_products')
+//         .select('category');
+//       if (error || !data) return console.error(error?.message);
+//       const tally: Record<string, number> = {};
+//       data.forEach((p: any) => {
+//         if (!p.category) return;
+//         tally[p.category] = (tally[p.category] || 0) + 1;
+//       });
+//       setCategoryStats(
+//         Object.entries(tally).map(([name, value]) => ({ name, value }))
+//       );
+//     })();
+
+//     // 7) Favorite recipes scatter stats
+//     (async () => {
+//       const { data, error } = await supabase
+//         .from('favorite_recipes')
+//         .select('recipe_id');
+//       if (!error && data) {
+//         const tally: Record<string, number> = {};
+//         data.forEach((f: any) => {
+//           tally[f.recipe_id] = (tally[f.recipe_id] || 0) + 1;
+//         });
+//         setFavoritesStats(
+//           Object.entries(tally).map(([recipe_id, value]) => ({ recipe_id, value }))
+//         );
+//       }
+//     })();
+//   }, []);
+
+//   // Delete helpers
+//   const deleteRecipe = async (id: number, title: string) => {
+//     if (!window.confirm(`Delete recipe “${title}”?`)) return;
+//     try {
+//       await supabase.from('recipe_ratings').delete().eq('recipe_id', id);
+//       await supabase.from('comments').delete().eq('recipe_id', id);
+//       const { error } = await supabase.from('recipes').delete().eq('id', id);
+//       if (error) throw error;
+//       setLowRatedRecipes(r => r.filter(x => x.id !== id));
+//     } catch {
+//       alert('Failed to delete recipe.');
+//     }
+//   };
+
+//   const deleteProduct = async (id: number, name: string) => {
+//     if (!window.confirm(`Delete product “${name}”?`)) return;
+//     try {
+//       const { error } = await supabase.from('seller_products').delete().eq('id', id);
+//       if (error) throw error;
+//       setHighPriceProducts(p => p.filter(x => x.id !== id));
+//     } catch {
+//       alert('Failed to delete product.');
+//     }
+//   };
+
+//   // Add Announcement helper
+//   const handleAddAnnouncement = async (e: React.FormEvent) => {
+//     e.preventDefault();
+//     if (!newTitle.trim() || !newMessage.trim()) {
+//       return alert('Title and message are required.');
+//     }
+//     setAdding(true);
+//     const { error } = await supabase
+//       .from('announcements')
+//       .insert([{ title: newTitle, message: newMessage, link: newLink || null }]);
+//     setAdding(false);
+//     if (error) {
+//       console.error(error);
+//       return alert('Failed to add announcement.');
+//     }
+//     alert('Announcement added!');
+//     setNewTitle('');
+//     setNewMessage('');
+//     setNewLink('');
+//   };
+
+//   return (
+//     <div className="p-6">
+//       <h1 className="text-2xl font-bold text-white bg-orange-500 px-4 py-2 rounded-md">
+//         Admin Dashboard
+//       </h1>
+
+//       {/* Stats */}
+//       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+//         {[
+//           { label: 'Total Users', val: totalUsers, color: 'text-blue-600' },
+//           { label: 'Total Chefs', val: totalChefs, color: 'text-purple-600' },
+//           { label: 'Total Sellers', val: totalSellers, color: 'text-green-600' },
+//           { label: 'Total Admins', val: totalAdmins, color: 'text-red-600' },
+//           { label: 'Total Donations', val: totalDonations, color: 'text-orange-600' },
+//           { label: 'Total Occasions', val: totalOccasions, color: 'text-pink-600' },
+//         ].map(c => (
+//           <div key={c.label} className="bg-white shadow rounded-lg p-4">
+//             <h2 className="text-sm font-semibold text-gray-500">{c.label}</h2>
+//             <p className={`mt-1 text-2xl font-bold ${c.color}`}>{c.val}</p>
+//           </div>
+//         ))}
+//       </div>
+
+//       {/* Charts: Donations & Occasions */}
+//       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+//         {/* Donations */}
+//         <div className="bg-white p-6 shadow rounded-lg">
+//           <h3 className="text-lg font-semibold mb-4">Donations by Beneficiary</h3>
+//           <ResponsiveContainer width="100%" height={250}>
+//             <PieChart>
+//               <Pie
+//                 data={donationBeneficiaryStats}
+//                 dataKey="value"
+//                 nameKey="name"
+//                 cx="50%"
+//                 cy="50%"
+//                 outerRadius={80}
+//                 label={({ name, percent }) => `${name}: ${(percent! * 100).toFixed(0)}%`}
+//               >
+//                 {donationBeneficiaryStats.map((_, i) => (
+//                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
+//                 ))}
+//               </Pie>
+//               <ReTooltip />
+//             </PieChart>
+//           </ResponsiveContainer>
+//         </div>
+
+//         {/* Occasions */}
+//         <div className="bg-white p-6 shadow rounded-lg">
+//           <h3 className="text-lg font-semibold mb-4">Occasions by Type</h3>
+//           <ResponsiveContainer width="100%" height={250}>
+//             <BarChart data={occasionTypes}>
+//               <CartesianGrid strokeDasharray="3 3" />
+//               <XAxis dataKey="name" />
+//               <YAxis allowDecimals={false} />
+//               <ReTooltip />
+//               <Legend />
+//               <Bar dataKey="value">
+//                 {occasionTypes.map((_, i) => (
+//                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
+//                 ))}
+//               </Bar>
+//             </BarChart>
+//           </ResponsiveContainer>
+//         </div>
+//       </div>
+
+//       {/* Products by Category */}
+//       <div className="bg-white p-6 shadow rounded-lg mt-8">
+//         <h3 className="text-lg font-semibold mb-4">Products by Category</h3>
+//         <ResponsiveContainer width="100%" height={250}>
+//           <LineChart data={categoryStats}>
+//             <CartesianGrid strokeDasharray="3 3" />
+//             <XAxis dataKey="name" />
+//             <YAxis allowDecimals={false} />
+//             <ReTooltip />
+//             <Legend />
+//             <Line type="monotone" dataKey="value" stroke="#8884d8" />
+//           </LineChart>
+//         </ResponsiveContainer>
+//       </div>
+
+//       {/* Favorite Recipes Scatter Plot */}
+//       <section className="mt-12 bg-white shadow rounded-lg p-6">
+//         <h3 className="text-lg font-semibold mb-4">Favorite Recipes Scatter Plot</h3>
+//         <ResponsiveContainer width="100%" height={300}>
+//           <ScatterChart>
+//             <CartesianGrid strokeDasharray="3 3" />
+//             <XAxis dataKey="recipe_id" name="Recipe ID" />
+//             <YAxis dataKey="value" name="Number of Saves" allowDecimals={false} />
+//             <ReTooltip cursor={{ strokeDasharray: '3 3' }} />
+//             <Scatter name="Saves" data={favoritesStats} fill="#8884d8" />
+//           </ScatterChart>
+//         </ResponsiveContainer>
+//       </section>
+
+
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import {
@@ -11,12 +339,15 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Legend
+  Legend,
+  LineChart,
+  Line,
+  ScatterChart,
+  Scatter
 } from 'recharts';
 import { Bell as BellIcon } from 'lucide-react';
 
 const HIGH_PRICE_LIMIT = 100;
-// orange, green, light-brown (tan)
 const COLORS = ['#f97316', '#10b981', '#D2B48C'];
 
 interface Recipe {
@@ -34,6 +365,11 @@ interface SellerProduct {
   seller_id: string;
 }
 
+interface FavoriteStat {
+  recipe_title: string;
+  value: number;
+}
+
 const AdminDashboard: React.FC = () => {
   // Stats state
   const [totalUsers, setTotalUsers] = useState(0);
@@ -48,6 +384,8 @@ const AdminDashboard: React.FC = () => {
   const [highPriceProducts, setHighPriceProducts] = useState<SellerProduct[]>([]);
   const [donationBeneficiaryStats, setDonationBeneficiaryStats] = useState<any[]>([]);
   const [occasionTypes, setOccasionTypes] = useState<any[]>([]);
+  const [categoryStats, setCategoryStats] = useState<{ name: string; value: number }[]>([]);
+  const [favoritesStats, setFavoritesStats] = useState<FavoriteStat[]>([]);
 
   // Announcement form state
   const [newTitle, setNewTitle] = useState('');
@@ -55,7 +393,7 @@ const AdminDashboard: React.FC = () => {
   const [newLink, setNewLink] = useState('');
   const [adding, setAdding] = useState(false);
 
-  // map raw beneficiary codes to friendly labels
+  // Map raw beneficiary codes to friendly labels
   const BENEFICIARY_LABELS: Record<string, string> = {
     street: 'Poor people on the street',
     orphans: 'Orphans',
@@ -137,6 +475,39 @@ const AdminDashboard: React.FC = () => {
         );
       }
     })();
+
+    // 6) Products by Category
+    (async () => {
+      const { data, error } = await supabase
+        .from('seller_products')
+        .select('category');
+      if (error || !data) return console.error(error?.message);
+      const tally: Record<string, number> = {};
+      data.forEach((p: any) => {
+        if (!p.category) return;
+        tally[p.category] = (tally[p.category] || 0) + 1;
+      });
+      setCategoryStats(
+        Object.entries(tally).map(([name, value]) => ({ name, value }))
+      );
+    })();
+
+    // 7) Favorite recipes scatter stats (use title instead of UUID)
+    (async () => {
+      const { data, error } = await supabase
+        .from('favorite_recipes')
+        .select('recipe_id, recipes ( title )');
+      if (!error && data) {
+        const tally: Record<string, number> = {};
+        data.forEach((f: any) => {
+          const title = f.recipes?.title ?? 'Unknown';
+          tally[title] = (tally[title] || 0) + 1;
+        });
+        setFavoritesStats(
+          Object.entries(tally).map(([recipe_title, value]) => ({ recipe_title, value }))
+        );
+      }
+    })();
   }, []);
 
   // Delete helpers
@@ -164,7 +535,7 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  // 6) Add Announcement handler
+  // Add Announcement helper
   const handleAddAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || !newMessage.trim()) {
@@ -173,11 +544,7 @@ const AdminDashboard: React.FC = () => {
     setAdding(true);
     const { error } = await supabase
       .from('announcements')
-      .insert([{
-        title:   newTitle,
-        message: newMessage,
-        link:    newLink || null
-      }]);
+      .insert([{ title: newTitle, message: newMessage, link: newLink || null }]);
     setAdding(false);
     if (error) {
       console.error(error);
@@ -197,13 +564,13 @@ const AdminDashboard: React.FC = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-        {[ 
-          { label: 'Total Users',     val: totalUsers,     color: 'text-blue-600' },
-          { label: 'Total Chefs',     val: totalChefs,     color: 'text-purple-600' },
-          { label: 'Total Sellers',   val: totalSellers,   color: 'text-green-600' },
-          { label: 'Total Admins',    val: totalAdmins,    color: 'text-red-600' },
+        {[
+          { label: 'Total Users', val: totalUsers, color: 'text-blue-600' },
+          { label: 'Total Chefs', val: totalChefs, color: 'text-purple-600' },
+          { label: 'Total Sellers', val: totalSellers, color: 'text-green-600' },
+          { label: 'Total Admins', val: totalAdmins, color: 'text-red-600' },
           { label: 'Total Donations', val: totalDonations, color: 'text-orange-600' },
-          { label: 'Total Requests',  val: totalOccasions, color: 'text-pink-600' },
+          { label: 'Total Occasions', val: totalOccasions, color: 'text-pink-600' },
         ].map(c => (
           <div key={c.label} className="bg-white shadow rounded-lg p-4">
             <h2 className="text-sm font-semibold text-gray-500">{c.label}</h2>
@@ -212,9 +579,9 @@ const AdminDashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Charts */}
+      {/* Charts: Donations & Occasions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
-        {/* Donations by Beneficiary */}
+        {/* Donations */}
         <div className="bg-white p-6 shadow rounded-lg">
           <h3 className="text-lg font-semibold mb-4">Donations by Beneficiary</h3>
           <ResponsiveContainer width="100%" height={250}>
@@ -226,9 +593,7 @@ const AdminDashboard: React.FC = () => {
                 cx="50%"
                 cy="50%"
                 outerRadius={80}
-                label={({ name, percent }) =>
-                  `${name}: ${(percent! * 100).toFixed(0)}%`
-                }
+                label={({ name, percent }) => `${name}: ${(percent! * 100).toFixed(0)}%`}
               >
                 {donationBeneficiaryStats.map((_, i) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
@@ -239,7 +604,7 @@ const AdminDashboard: React.FC = () => {
           </ResponsiveContainer>
         </div>
 
-        {/* Occasions by Type */}
+        {/* Occasions */}
         <div className="bg-white p-6 shadow rounded-lg">
           <h3 className="text-lg font-semibold mb-4">Occasions by Type</h3>
           <ResponsiveContainer width="100%" height={250}>
@@ -259,6 +624,36 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Products by Category */}
+      <div className="bg-white p-6 shadow rounded-lg mt-8">
+        <h3 className="text-lg font-semibold mb-4">Products by Category</h3>
+        <ResponsiveContainer width="100%" height={250}>
+          <LineChart data={categoryStats}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis allowDecimals={false} />
+            <ReTooltip />
+            <Legend />
+            <Line type="monotone" dataKey="value" stroke="#8884d8" />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Favorite Recipes Scatter Plot */}
+      <section className="mt-12 bg-white shadow rounded-lg p-6">
+        <h3 className="text-lg font-semibold mb-4">Favorite Recipes</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <ScatterChart>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="recipe_title" name="Recipe Title" />
+            <YAxis dataKey="value" name="Number of Saves" allowDecimals={false} />
+            <ReTooltip cursor={{ strokeDasharray: '3 3' }} />
+            <Scatter name="Saves" data={favoritesStats} fill="#8884d8" />
+          </ScatterChart>
+        </ResponsiveContainer>
+      </section>
+
+
       {/* Add New Occasion */}
       <section className="mt-12 bg-white shadow rounded-lg p-6">
         <h3 className="text-lg font-semibold mb-4">Add New Occasion</h3>
@@ -266,7 +661,7 @@ const AdminDashboard: React.FC = () => {
           onSubmit={async e => {
             e.preventDefault();
             const f = e.target as HTMLFormElement;
-            const t = f.occasion_type  as HTMLInputElement;
+            const t = f.occasion_type as HTMLInputElement;
             const o = f.occasion_options as HTMLInputElement;
             const occasionType = t.value.trim();
             const optionsArray = o.value.trim().split(',').map(s => s.trim());
@@ -293,9 +688,7 @@ const AdminDashboard: React.FC = () => {
           className="space-y-4"
         >
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Occasion Title
-            </label>
+            <label className="block text-sm font-medium text-gray-700">Occasion Title</label>
             <input
               name="occasion_type"
               type="text"
@@ -304,9 +697,7 @@ const AdminDashboard: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Options (comma-separated)
-            </label>
+            <label className="block text-sm font-medium text-gray-700">Options (comma-separated)</label>
             <input
               name="occasion_options"
               type="text"
@@ -317,60 +708,29 @@ const AdminDashboard: React.FC = () => {
           <button
             type="submit"
             className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
-          >
-            Add Occasion
-          </button>
+          >Add Occasion</button>
         </form>
       </section>
 
       {/* Add New Announcement */}
       <section className="mt-12 bg-white shadow rounded-lg p-6">
         <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <BellIcon className="w-5 h-5 text-orange-500 mr-2" />
-          Add New Announcement
+          <BellIcon className="w-5 h-5 text-orange-500 mr-2" /> Add New Announcement
         </h3>
         <form onSubmit={handleAddAnnouncement} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Title
-            </label>
-            <input
-              type="text"
-              value={newTitle}
-              onChange={e => setNewTitle(e.target.value)}
-              className="mt-1 w-full border px-4 py-2 rounded"
-              placeholder="Announcement title"
-            />
+            <label className="block text-sm font-medium text-gray-700">Title</label>
+            <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} className="mt-1 w-full border px-4 py-2 rounded" placeholder="Announcement title" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Message
-            </label>
-            <textarea
-              value={newMessage}
-              onChange={e => setNewMessage(e.target.value)}
-              className="mt-1 w-full border px-4 py-2 rounded"
-              rows={3}
-              placeholder="What’s the announcement?"
-            />
+            <label className="block text-sm font-medium text-gray-700">Message</label>
+            <textarea value={newMessage} onChange={e => setNewMessage(e.target.value)} className="mt-1 w-full border px-4 py-2 rounded" rows={3} placeholder="What’s the announcement?" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Link (optional)
-            </label>
-            <input
-              type="url"
-              value={newLink}
-              onChange={e => setNewLink(e.target.value)}
-              className="mt-1 w-full border px-4 py-2 rounded"
-              placeholder="https://..."
-            />
+            <label className="block text-sm font-medium text-gray-700">Link (optional)</label>
+            <input type="url" value={newLink} onChange={e => setNewLink(e.target.value)} className="mt-1 w-full border px-4 py-2 rounded" placeholder="https://..." />
           </div>
-          <button
-            type="submit"
-            disabled={adding}
-            className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 disabled:opacity-50"
-          >
+          <button type="submit" disabled={adding} className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 disabled:opacity-50">
             {adding ? 'Adding…' : 'Add Announcement'}
           </button>
         </form>
@@ -389,12 +749,7 @@ const AdminDashboard: React.FC = () => {
                   <p className="font-semibold">{r.title}</p>
                   <p className="text-sm text-gray-500">Rating: {r.avg_rating}</p>
                 </div>
-                <button
-                  onClick={() => deleteRecipe(r.id, r.title)}
-                  className="text-sm bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                >
-                  Delete
-                </button>
+                <button onClick={() => deleteRecipe(r.id, r.title)} className="text-sm bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Delete</button>
               </li>
             ))}
           </ul>
@@ -403,9 +758,7 @@ const AdminDashboard: React.FC = () => {
 
       {/* High Price Products */}
       <section className="mt-10">
-        <h2 className="text-xl font-semibold mb-4">
-          Seller Products ${HIGH_PRICE_LIMIT}+
-        </h2>
+        <h2 className="text-xl font-semibold mb-4">Seller Products ${HIGH_PRICE_LIMIT}+</h2>
         {highPriceProducts.length === 0 ? (
           <p className="text-gray-500">No overpriced products found.</p>
         ) : (
@@ -416,12 +769,7 @@ const AdminDashboard: React.FC = () => {
                   <p className="font-semibold">{p.name}</p>
                   <p className="text-sm text-gray-500">Price: ${p.price}</p>
                 </div>
-                <button
-                  onClick={() => deleteProduct(p.id, p.name)}
-                  className="text-sm bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                >
-                  Delete
-                </button>
+                <button onClick={() => deleteProduct(p.id, p.name)} className="text-sm bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Delete</button>
               </li>
             ))}
           </ul>

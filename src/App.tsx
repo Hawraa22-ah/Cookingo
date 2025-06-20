@@ -21,7 +21,9 @@ import AdminDashboard from './pages/AdminDashboard';
 import Donation from './pages/Donation';
 import OccasionsPage from './pages/OccasionsPage';
 import AnnouncementsPage from './pages/AnnouncementsPage';
-import NotificationsPage from './pages/NotificationsPage';
+import ChefOccasionRequestsSection from './components/profile/ChefOccasionRequestsSection';
+import CartSection from './components/cart/CartSection'; // Adjust the path accordingly
+import SellerNotificationsSection from './components/profile/SellerNotificationsSection';
 
 function ChatWidgetLoader() {
   const { user } = useAuth();
@@ -78,7 +80,9 @@ function App() {
             <Route path="/occasions" element={<OccasionsPage />} />
             <Route path="/donation" element={<Donation />} />
             <Route path="/profile/announcements" element={<AnnouncementsPage />} />
-            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/chef/requests" element={<ChefOccasionRequestsSection />}/>
+            <Route path="/cart" element={<CartSection />} />
+            <Route path="/profile/seller-notifications" element={<SellerNotificationsSection />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>

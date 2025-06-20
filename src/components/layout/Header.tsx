@@ -217,9 +217,9 @@ const Header: React.FC = () => {
             <Link to="/occasions" className={linkClass('/occasions')}>Occasions</Link>
             <Link to="/products" className={linkClass('/products')}>Products</Link>
             <Link to="/donation" className={linkClass('/donation')}>Donation</Link>
-            {isChef && (
+            {/* {isChef && (
               <Link to="/chef/dashboard" className={linkClass('/chef/dashboard')}>Chef Dashboard</Link>
-            )}
+            )} */}
             <AuthButtons />
           </nav>
 

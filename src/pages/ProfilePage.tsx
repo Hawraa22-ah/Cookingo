@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
   Bell as BellIcon,
+  Megaphone as AnnounceIcon,
   User,
   ChefHat,
   Settings,
@@ -14,25 +15,25 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { Recipe } from '../types'
 import RecipeGrid from '../components/recipes/RecipeGrid'
-// You will need to pass props to these components:
 import OrdersSection from '../components/profile/OrdersSection'
 import OccasionsOrdersSection from '../components/profile/OccasionsOrdersSection'
 import AnnouncementsPage from './AnnouncementsPage'
+import ChefOccasionRequestsSection from '../components/profile/ChefOccasionRequestsSection'
+import SellerNotificationsSection from '../components/profile/SellerNotificationsSection'
+import CartSection from '../components/cart/CartSection'
 
 const ProfilePage: React.FC = () => {
   const { user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
-  const [profile, setProfile] = useState<any>(null)
-  const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([])
-  const [cartItems, setCartItems] = useState<any[]>([])
+  const [profile, setProfile]             = useState<any>(null)
+  const [savedRecipes, setSavedRecipes]   = useState<Recipe[]>([])
+  const [cartItems, setCartItems]         = useState<any[]>([])
   const [notifications, setNotifications] = useState<any[]>([])
-  const [orders, setOrders] = useState<any[]>([])
-  const [dishOrders, setDishOrders] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading]             = useState(true)
   const [activeTab, setActiveTab] = useState<
-    'saved' | 'occasions' | 'orders' | 'cart' | 'announcements'
+    'saved' | 'occasions' | 'orders' | 'cart' | 'announcements' | 'notifications'
   >('saved')
 
   // 1) load profile + saved
@@ -55,7 +56,7 @@ const ProfilePage: React.FC = () => {
   }, [user])
 
   // 2) load cart items
-  const fetchCartItems = useCallback(async () => {
+  const fetchCartItems = async () => {
     const { data: cart } = await supabase
       .from('shopping_cart')
       .select('*')
@@ -65,96 +66,33 @@ const ProfilePage: React.FC = () => {
       return
     }
     const ids = cart.map(c => c.product_id)
-    let prods = []
-    if (ids.length > 0) {
-      const { data } = await supabase
-        .from('seller_products')
-        .select('*')
-        .in('id', ids)
-      prods = data || []
-    }
+    const { data: prods } = await supabase
+      .from('seller_products')
+      .select('*')
+      .in('id', ids)
+
     setCartItems(
       cart.map(item => ({
         ...item,
-        seller_products: prods.find(p => p.id === item.product_id) || {},
+        seller_products: prods?.find(p => p.id === item.product_id),
       }))
     )
-  }, [user])
+  }
 
-  // 3) load orders (products)
-  const fetchOrders = useCallback(async () => {
-    const { data: orders } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('user_id', user?.id)
-      .order('created_at', { ascending: false })
-
-    // Attach product info
-    if (orders && orders.length) {
-      const productIds = orders.map(o => o.product_id).filter(Boolean)
-      let prods: any[] = []
-      if (productIds.length > 0) {
-        const { data } = await supabase
-          .from('seller_products')
-          .select('*')
-          .in('id', productIds)
-        prods = data || []
-      }
-      setOrders(
-        orders.map(order => ({
-          ...order,
-          product: prods.find(p => p.id === order.product_id) || {},
-        }))
-      )
-    } else {
-      setOrders([])
-    }
-  }, [user])
-
-  // 4) load daily dish orders
-  const fetchDishOrders = useCallback(async () => {
-    const { data: dishOrders } = await supabase
-      .from('daily_dish_orders')
-      .select('*')
-      .eq('user_id', user?.id)
-      .order('created_at', { ascending: false })
-
-    // Attach dish info
-    if (dishOrders && dishOrders.length) {
-      const dishIds = dishOrders.map(o => o.dish_id).filter(Boolean)
-      let dishes: any[] = []
-      if (dishIds.length > 0) {
-        const { data } = await supabase
-          .from('dishes')
-          .select('*')
-          .in('id', dishIds)
-        dishes = data || []
-      }
-      setDishOrders(
-        dishOrders.map(order => ({
-          ...order,
-          dish: dishes.find(d => d.id === order.dish_id) || {},
-        }))
-      )
-    } else {
-      setDishOrders([])
-    }
-  }, [user])
-
-  // 5) load seller notifications (for badge)
-  const fetchNotifications = useCallback(async () => {
-    if (!user) {
+  // 3) load chef notifications (for badge)
+  const fetchNotifications = async () => {
+    if (!user || profile?.role !== 'chef') {
       setNotifications([])
       return
     }
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
-      .eq('seller_id', user.id)
+      .eq('chef_id', user.id)
       .order('created_at', { ascending: false })
     if (error) console.error(error)
     else setNotifications(data || [])
-  }, [user])
+  }
 
   // initial
   useEffect(() => {
@@ -164,14 +102,12 @@ const ProfilePage: React.FC = () => {
     }
     loadProfileData()
     fetchCartItems()
-    fetchOrders()
-    fetchDishOrders()
-  }, [user, navigate, loadProfileData, fetchCartItems, fetchOrders, fetchDishOrders])
+  }, [user, navigate, loadProfileData])
 
   // whenever profile changes, fetch notifications
   useEffect(() => {
     fetchNotifications()
-  }, [profile, fetchNotifications])
+  }, [profile])
 
   // switch to tab=cart via URL
   useEffect(() => {
@@ -182,16 +118,17 @@ const ProfilePage: React.FC = () => {
 
   const removeFromCart = async (id: string) => {
     await supabase.from('shopping_cart').delete().eq('id', id)
-    fetchCartItems()
+    setCartItems(prev => prev.filter(i => i.id !== id))
   }
 
   const getCartTotal = () =>
     cartItems.reduce((sum, i) => sum + (i.seller_products?.price || 0) * i.quantity, 0)
 
-  // 6) checkout
+  // 4) checkout
   const handleCheckout = async () => {
     try {
       for (const item of cartItems) {
+        // Insert order
         const { data: orderData, error: orderError } = await supabase
           .from('orders')
           .insert([{
@@ -202,29 +139,34 @@ const ProfilePage: React.FC = () => {
             status: 'pending',
           }])
           .select()
-          .single()
+          .single();
 
         if (orderError || !orderData) {
           console.error('Order insert failed:', orderError)
           continue
         }
 
-        await supabase.from('notifications').insert([{
+        // Insert seller notification
+        const { data: notifData, error: notifError } = await supabase.from('seller_notifications').insert([{
           seller_id: item.seller_products.seller_id,
           order_id: orderData.id,
+          buyer_id: user!.id,
+          product_ids: [item.seller_products.id],
           message: `New order from ${profile.username} • ${item.quantity} × ${item.seller_products.name}`,
           is_read: false,
-          type: 'order',
-          product_id: item.seller_products.id,
-          qty: item.quantity,
           created_at: new Date().toISOString(),
-        }])
+        }]);
+        if (notifError) {
+          console.error('Seller notification insert error:', notifError);
+        } else {
+          console.log('Inserted seller notification:', notifData);
+        }
       }
 
       await supabase.from('shopping_cart').delete().eq('user_id', user!.id)
-      fetchCartItems()
-      fetchOrders()
-      fetchNotifications()
+      setCartItems([])
+
+      await fetchNotifications()
 
       alert('Order placed! Sellers have been notified.')
     } catch (err) {
@@ -241,7 +183,10 @@ const ProfilePage: React.FC = () => {
     { key: 'occasions',     label: 'Order Occasions', icon: Gift },
     { key: 'orders',        label: 'My Orders',       icon: Package },
     { key: 'cart',          label: 'Shopping Cart',   icon: ShoppingCartIcon },
-    { key: 'announcements', label: 'Announcements',   icon: BellIcon },
+    { key: 'announcements', label: 'Announcements',   icon: AnnounceIcon },
+    ...(profile.role === 'chef' || profile.role === 'seller'
+      ? [{ key: 'notifications', label: 'Notifications', icon: BellIcon }]
+      : []),
   ]
 
   return (
@@ -277,16 +222,6 @@ const ProfilePage: React.FC = () => {
                 Seller Dashboard
               </button>
             )}
-            {(profile.role === 'seller' || profile.role === 'chef') && (
-              <button onClick={() => navigate('/notifications')} className="relative text-gray-600 hover:text-orange-500">
-                <BellIcon className="w-6 h-6" />
-                {notifications.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1">
-                    {notifications.length}
-                  </span>
-                )}
-              </button>
-            )}
             <button onClick={() => navigate('/settings')} className="text-gray-600 hover:text-orange-500">
               <Settings className="w-6 h-6" />
             </button>
@@ -311,59 +246,26 @@ const ProfilePage: React.FC = () => {
         </div>
 
         {/* CONTENT PANELS */}
-        {activeTab === 'saved' && (
-          savedRecipes.length ? (
-            <RecipeGrid recipes={savedRecipes} />
-          ) : (
-            <div className="text-center py-12 bg-white rounded-xl shadow-md">
+        {activeTab === 'saved'          && (savedRecipes.length
+          ? <RecipeGrid recipes={savedRecipes} />
+          : <div className="text-center py-12 bg-white rounded-xl shadow-md">
               <ChefHat className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600 mb-4">You haven’t saved any recipes yet.</p>
               <button onClick={() => navigate('/recipes')} className="text-orange-500 hover:text-orange-600">
                 Browse Recipes
               </button>
             </div>
-          )
         )}
-        {activeTab === 'occasions' && <OccasionsOrdersSection />}
-        {activeTab === 'orders' && (
-          <OrdersSection orders={orders} dishOrders={dishOrders} />
+        {activeTab === 'occasions'      && <OccasionsOrdersSection />}
+        {activeTab === 'orders'         && <OrdersSection />}
+        {activeTab === 'cart'           && <CartSection />}
+        {activeTab === 'announcements'  && <AnnouncementsPage />}
+        {activeTab === 'notifications'  && (
+          profile.role === 'chef'
+            ? <ChefOccasionRequestsSection />
+            : <SellerNotificationsSection />
         )}
-        {activeTab === 'cart' && (
-          <div className="bg-white rounded-xl shadow-md p-4">
-            {cartItems.length > 0 ? (
-              <>
-                {cartItems.map(item => (
-                  <div key={item.id} className="flex items-center justify-between mb-4">
-                    <img src={item.seller_products.image_url} alt={item.seller_products.name} className="w-16 h-16 rounded" />
-                    <div className="flex-1 px-4">
-                      <h3 className="font-medium">{item.seller_products.name}</h3>
-                      <p className="text-gray-500">{item.quantity} × ${item.unit_price?.toFixed(2) ?? '0.00'}</p>
-                    </div>
-                    <button onClick={() => removeFromCart(item.id)} className="text-red-500 hover:underline">
-                      Remove
-                    </button>
-                  </div>
-                ))}
-                <div className="flex justify-between items-center mt-6">
-                  <span className="font-semibold">Total:</span>
-                  <span className="text-lg font-bold">${getCartTotal().toFixed(2)}</span>
-                </div>
-                <button onClick={handleCheckout} className="mt-4 w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded">
-                  Checkout
-                </button>
-              </>
-            ) : (
-              <div className="text-center py-12">
-                <ShoppingCartIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-4">Your cart is empty.</p>
-                <button onClick={() => navigate('/products')} className="text-orange-500 hover:underline">
-                  Browse Products
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-        {activeTab === 'announcements' && <AnnouncementsPage />}
+
       </div>
     </div>
   )

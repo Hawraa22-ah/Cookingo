@@ -1,62 +1,33 @@
-// import { createClient } from '@supabase/supabase-js';
-
-// const supabase = createClient(
-//   import.meta.env.VITE_SUPABASE_URL!,
-//   import.meta.env.VITE_SUPABASE_ANON_KEY!
-
-  
-// );
-
-// export { supabase };
-
-// src/lib/supabase.ts
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!
-)
+// Vite exposes env vars on import.meta.env
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL!
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY!
 
-// ── Notification helpers ──────────────────────────────────────────────────────
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-/**
- * Fetch all notifications for a given seller, newest first.
- */
-export async function getNotifications(seller_id: string) {
-  const { data, error } = await supabase
+/** Fetch notifications for a given chef */
+export async function getNotificationsForChef(chefId: string) {
+  return supabase
     .from('notifications')
     .select('*')
-    .eq('seller_id', seller_id)
+    .eq('chef_id', chefId)
     .order('created_at', { ascending: false })
-  if (error) throw error
-  return data!
 }
 
-/**
- * Mark a single notification as read.
- */
-export async function markNotificationRead(id: string) {
-  const { data, error } = await supabase
+/** Mark all chef notifications read */
+export function markAllReadForChef(chefId: string) {
+  return supabase
     .from('notifications')
-    .update({ is_read: true, read_at: new Date().toISOString() })
-    .eq('id', id)
-  if (error) throw error
-  return data!
+    .update({ is_read: true })
+    .eq('chef_id', chefId)
+    .eq('is_read', false)
 }
 
-/**
- * Mark all notifications for a seller as read.
- */
-export async function markAllRead(seller_id: string) {
-  const { data, error } = await supabase
+/** Mark a single notification read */
+export function markNotificationRead(notificationId: number) {
+  return supabase
     .from('notifications')
-    .update({ is_read: true, read_at: new Date().toISOString() })
-    .eq('seller_id', seller_id)
-  if (error) throw error
-  return data!
+    .update({ is_read: true })
+    .eq('id', notificationId)
 }
-
-// ── (Optional) Other domain helpers ───────────────────────────────────────────
-// You could also move your cart-to-order logic here, e.g. createOrder, etc.
-
-export { supabase }
