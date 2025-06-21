@@ -1,80 +1,447 @@
-import React, { useEffect, useState } from 'react';
+// import React, { useEffect, useState, useMemo } from 'react';
+// import { supabase } from '../../lib/supabase';
+// import { useAuth } from '../../contexts/AuthContext';
+
+// interface RawNotification {
+//   id: string;
+//   qty: number;
+//   message: string;
+//   created_at: string;
+//   is_read: boolean;
+//   product_id: string;
+// }
+
+// interface EnrichedNotification extends RawNotification {
+//   product: {
+//     id: string;
+//     name: string;
+//     image_url: string | null;
+//     price: number;
+//   };
+// }
+
+// const SellerNotificationsSection: React.FC = () => {
+//   const { user } = useAuth();
+//   const [notifications, setNotifications] = useState<EnrichedNotification[]>([]);
+//   const [loading, setLoading] = useState(true);
+
+//   // 1) fetch raw notifications then batch‐fetch products
+//   const fetchNotifications = async () => {
+//     if (!user?.id) { setLoading(false); return; }
+//     setLoading(true);
+
+//     const { data: raws, error: rawsErr } = await supabase
+//       .from<RawNotification>('seller_notifications')
+//       .select('id, qty, message, created_at, is_read, product_id')
+//       .eq('seller_id', user.id)
+//       .order('created_at', { ascending: false });
+
+//     if (rawsErr || !raws) {
+//       console.error(rawsErr);
+//       setNotifications([]);
+//       setLoading(false);
+//       return;
+//     }
+
+//     const ids = Array.from(new Set(raws.map(r => r.product_id)));
+//     const { data: prods, error: prodsErr } = await supabase
+//       .from('seller_products')
+//       .select('id, name, image_url, price')
+//       .in('id', ids);
+
+//     if (prodsErr || !prods) {
+//       console.error(prodsErr);
+//       setNotifications([]);
+//       setLoading(false);
+//       return;
+//     }
+
+//     setNotifications(
+//       raws.map(r => ({
+//         ...r,
+//         product: prods.find(p => p.id === r.product_id)!,
+//       }))
+//     );
+//     setLoading(false);
+//   };
+
+//   useEffect(() => {
+//     fetchNotifications();
+//   }, [user?.id]);
+
+//   // 2) mark one notification read
+//   const markAsRead = async (id: string) => {
+//     const { error } = await supabase
+//       .from('seller_notifications')
+//       .update({ is_read: true })
+//       .eq('id', id);
+//     if (error) console.error(error);
+//     else fetchNotifications();
+//   };
+
+//   // 3) mark entire order read
+//   const markOrderAsRead = async (orderIds: string[]) => {
+//     const { error } = await supabase
+//       .from('seller_notifications')
+//       .update({ is_read: true })
+//       .in('id', orderIds);
+//     if (error) console.error(error);
+//     else fetchNotifications();
+//   };
+
+//   // 4) group notifications into “orders” by minute
+//   const orders = useMemo(() => {
+//     const map: Record<string, EnrichedNotification[]> = {};
+//     notifications.forEach(n => {
+//       const key = new Date(n.created_at).toISOString().slice(0, 16);
+//       (map[key] ??= []).push(n);
+//     });
+//     return Object.values(map);
+//   }, [notifications]);
+
+//   if (loading) return <div>Loading…</div>;
+//   if (!orders.length) return <div>No notifications yet.</div>;
+
+//   return (
+//     <div>
+//       <ul style={{ listStyle: 'none', padding: 0 }}>
+//         {orders.map((items, idx) => {
+//           const ts = new Date(items[0].created_at).toLocaleString();
+//           const total = items.reduce((sum, n) => sum + n.product.price * n.qty, 0);
+//           const orderIds = items.map(n => n.id);
+//           const allRead = items.every(n => n.is_read);
+
+//           return (
+//             <li
+//               key={items[0].created_at}
+//               style={{
+//                 background: '#fffbe7',
+//                 borderRadius: 8,
+//                 padding: 16,
+//                 marginBottom: 16,
+//               }}
+//             >
+//               <div style={{ fontWeight: 'bold', marginBottom: 8 }}>
+//                 Order {idx + 1}:
+//               </div>
+
+//               {/* per‐product entries */}
+//               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+//                 {items.map(n => (
+//                   <li
+//                     key={n.id}
+//                     style={{
+//                       display: 'flex',
+//                       alignItems: 'center',
+//                       gap: 8,
+//                       marginBottom: 8,
+//                     }}
+//                   >
+//                     {n.product.image_url && (
+//                       <img
+//                         src={n.product.image_url}
+//                         alt={n.product.name}
+//                         style={{
+//                           width: 24,
+//                           height: 24,
+//                           objectFit: 'cover',
+//                           borderRadius: 4,
+//                         }}
+//                       />
+//                     )}
+//                     <span>
+//                       {n.product.name} × {n.qty}
+//                     </span>
+//                     <span style={{ marginLeft: 'auto', fontStyle: 'italic' }}>
+//                       ${(n.product.price * n.qty).toFixed(2)}
+//                     </span>
+//                     <button
+//                       onClick={() => markAsRead(n.id)}
+//                       disabled={n.is_read}
+//                       style={{
+//                         padding: '4px 8px',
+//                         fontSize: '0.75rem',
+//                         background: n.is_read ? 'green' : 'blue',
+//                         color: 'white',
+//                         border: 'none',
+//                         borderRadius: 4,
+//                         cursor: n.is_read ? 'default' : 'pointer',
+//                       }}
+//                     >
+//                       Done
+//                     </button>
+//                   </li>
+//                 ))}
+//               </ul>
+
+//               {/* same line as Total, but underneath the Done buttons */}
+//               <div
+//                 style={{
+//                   display: 'flex',
+//                   justifyContent: 'space-between',
+//                   alignItems: 'center',
+//                   marginTop: 12,
+//                 }}
+//               >
+//                 <div style={{ fontWeight: 'bold' }}>Total: ${total.toFixed(2)}</div>
+//                 <button
+//                   onClick={() => markOrderAsRead(orderIds)}
+//                   disabled={allRead}
+//                   style={{
+//                     padding: '6px 12px',
+//                     background: allRead ? 'green' : 'blue',
+//                     color: 'white',
+//                     border: 'none',
+//                     borderRadius: 4,
+//                     cursor: allRead ? 'default' : 'pointer',
+//                   }}
+//                 >
+//                   {allRead ? 'Delivered' : 'Mark is Delivered'}
+//                 </button>
+//               </div>
+
+//               <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+//                 {ts}
+//               </div>
+//             </li>
+//           );
+//         })}
+//       </ul>
+//     </div>
+//   );
+// };
+
+// export default SellerNotificationsSection;
+import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { MapPin } from 'lucide-react';
 
-interface FinishOrderNotification {
+interface RawNotification {
   id: string;
-  product_name: string;
-  quantity: number;
-  unit_price: number;
-  product_image?: string | null;
+  qty: number;
+  message: string;
   created_at: string;
-  is_read?: boolean; // optional, in case you don't have it yet
+  is_read: boolean;
+  product_id: string;
+  address: string | null;    // ← new
+  latitude: number | null;   // ← new
+  longitude: number | null;  // ← new
+}
+
+interface EnrichedNotification extends RawNotification {
+  product: {
+    id: string;
+    name: string;
+    image_url: string | null;
+    price: number;
+  };
 }
 
 const SellerNotificationsSection: React.FC = () => {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState<FinishOrderNotification[]>([]);
+  const [notifications, setNotifications] = useState<EnrichedNotification[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchNotifications = async () => {
+    if (!user?.id) { setLoading(false); return; }
     setLoading(true);
-    const { data, error } = await supabase
-      .from('finish_order')
-      .select('*')
+
+    // 1) fetch raw notifications + location
+    const { data: raws, error: rawsErr } = await supabase
+      .from<RawNotification>('seller_notifications')
+      .select(`
+        id,
+        qty,
+        message,
+        created_at,
+        is_read,
+        product_id,
+        address,
+        latitude,
+        longitude
+      `)
       .eq('seller_id', user.id)
       .order('created_at', { ascending: false });
-    if (!error) setNotifications(data || []);
+
+    if (rawsErr || !raws) {
+      console.error(rawsErr);
+      setNotifications([]);
+      setLoading(false);
+      return;
+    }
+
+    // 2) batch‐fetch products
+    const ids = Array.from(new Set(raws.map(r => r.product_id)));
+    const { data: prods, error: prodsErr } = await supabase
+      .from('seller_products')
+      .select('id, name, image_url, price')
+      .in('id', ids);
+
+    if (prodsErr || !prods) {
+      console.error(prodsErr);
+      setNotifications([]);
+      setLoading(false);
+      return;
+    }
+
+    // 3) merge
+    setNotifications(
+      raws.map(r => ({
+        ...r,
+        product: prods.find(p => p.id === r.product_id)!,
+      }))
+    );
     setLoading(false);
   };
 
   useEffect(() => {
-    if (user?.id) {
-      fetchNotifications();
-    }
-  }, [user]);
+    fetchNotifications();
+  }, [user?.id]);
 
-  const markAsRead = async (notifId: string) => {
-    await supabase.from('finish_order').update({ is_read: true }).eq('id', notifId);
+  // mark read helpers (unchanged)…
+  const markAsRead = async (id: string) => {
+    await supabase.from('seller_notifications').update({ is_read: true }).eq('id', id);
+    fetchNotifications();
+  };
+  const markOrderAsRead = async (orderIds: string[]) => {
+    await supabase.from('seller_notifications').update({ is_read: true }).in('id', orderIds);
     fetchNotifications();
   };
 
+  // group by minute
+  const orders = useMemo(() => {
+    const map: Record<string, EnrichedNotification[]> = {};
+    notifications.forEach(n => {
+      const key = new Date(n.created_at).toISOString().slice(0, 16);
+      (map[key] ??= []).push(n);
+    });
+    return Object.values(map);
+  }, [notifications]);
+
+  if (loading) return <div>Loading…</div>;
+  if (!orders.length) return <div>No notifications yet.</div>;
+
   return (
-    <div>
-      <h2>Seller Notifications</h2>
-      {loading ? (
-        <div>Loading...</div>
-      ) : (
-        <ul>
-          {notifications.map(notif => (
-            <li
-              key={notif.id}
+    <ul style={{ listStyle: 'none', padding: 0 }}>
+      {orders.map((items, idx) => {
+        const ts    = new Date(items[0].created_at).toLocaleString();
+        const total = items.reduce((sum, n) => sum + n.product.price * n.qty, 0);
+        const orderIds = items.map(n => n.id);
+        const allRead  = items.every(n => n.is_read);
+
+        return (
+          <li
+            key={items[0].created_at}
+            style={{
+              background: '#fffbe7',
+              borderRadius: 8,
+              padding: 16,
+              marginBottom: 16,
+            }}
+          >
+            {/* ─── display user’s location ─── */}
+            {items[0].address && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  marginBottom: 8,
+                  color: '#555',
+                }}
+              >
+                <MapPin style={{ width: 16, height: 16 }} />
+                <span>{items[0].address}</span>
+              </div>
+            )}
+
+            <div style={{ fontWeight: 'bold', marginBottom: 8 }}>
+              Order {idx + 1}:
+            </div>
+
+            {/* per‐product */}
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {items.map(n => (
+                <li
+                  key={n.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    marginBottom: 8,
+                  }}
+                >
+                  {n.product.image_url && (
+                    <img
+                      src={n.product.image_url}
+                      alt={n.product.name}
+                      style={{
+                        width: 24,
+                        height: 24,
+                        objectFit: 'cover',
+                        borderRadius: 4,
+                      }}
+                    />
+                  )}
+                  <span>
+                    {n.product.name} × {n.qty}
+                  </span>
+                  <span style={{ marginLeft: 'auto', fontStyle: 'italic' }}>
+                    ${(n.product.price * n.qty).toFixed(2)}
+                  </span>
+                  <button
+                    onClick={() => markAsRead(n.id)}
+                    disabled={n.is_read}
+                    style={{
+                      padding: '4px 8px',
+                      fontSize: '0.75rem',
+                      background: n.is_read ? 'green' : 'blue',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: 4,
+                      cursor: n.is_read ? 'default' : 'pointer',
+                    }}
+                  >
+                    Done
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            {/* total + mark delivered */}
+            <div
               style={{
-                background: notif.is_read ? '#f9f9f9' : '#fffbe7',
-                marginBottom: 8,
-                padding: 10,
-                borderRadius: 4
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: 12,
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                {notif.product_image && (
-                  <img src={notif.product_image} alt={notif.product_name} style={{ width: 32, height: 32, borderRadius: 4 }} />
-                )}
-                <span>
-                  <strong>{notif.product_name}</strong> × {notif.quantity} — ${notif.unit_price.toFixed(2)}
-                </span>
-              </div>
-              <div style={{ fontSize: 12, color: '#888' }}>
-                {new Date(notif.created_at).toLocaleString()}
-              </div>
-              {notif.is_read === false && (
-                <button onClick={() => markAsRead(notif.id)}>Mark as read</button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+              <div style={{ fontWeight: 'bold' }}>Total: ${total.toFixed(2)}</div>
+              <button
+                onClick={() => markOrderAsRead(orderIds)}
+                disabled={allRead}
+                style={{
+                  padding: '6px 12px',
+                  background: allRead ? 'green' : 'blue',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 4,
+                  cursor: allRead ? 'default' : 'pointer',
+                }}
+              >
+                {allRead ? 'Delivered' : 'Mark is Delivered'}
+              </button>
+            </div>
+
+            <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+              {ts}
+            </div>
+          </li>
+        );
+      })}
+    </ul>
   );
 };
 

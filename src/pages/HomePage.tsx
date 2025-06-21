@@ -13,8 +13,15 @@ const HomePage: React.FC = () => {
     const fetchLatestRecipes = async () => {
       const { data, error } = await supabase
         .from('recipes')
-        .select('id, title, description, image_url, tags, created_at, status')
-        .eq('status', 'published')
+        // .select('id, title, description, image_url, tags, created_at, status')
+        .select(`
+            *,
+            chef:profiles!fk_chef (
+              id,
+              username
+            )
+          `).
+        eq('status', 'published')
         .order('created_at', { ascending: false })
         .limit(3);
 
