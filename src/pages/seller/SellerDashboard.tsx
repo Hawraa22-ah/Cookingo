@@ -59,14 +59,16 @@ export default function SellerDashboard() {
   }, [navigate]);
 
   const fetchProducts = useCallback(async () => {
-    if (!userId) return;
-    const { data, error } = await supabase
-      .from('seller_products')
-      .select<Product[]>('*')
-      .eq('seller_id', userId);
-    if (error) console.error('Error loading products:', error);
-    setProducts(data ?? []);
-  }, [userId]);
+  if (!userId) return;
+  const { data, error } = await supabase
+    .from('seller_products')
+    .select('*')
+    .eq('seller_id', userId)
+    .eq('active', true); // Only show active products
+  if (error) console.error('Error loading products:', error);
+  setProducts(data ?? []);
+}, [userId]);
+
 
   useEffect(() => {
     fetchProducts();
@@ -133,21 +135,24 @@ export default function SellerDashboard() {
   };
 
   const deleteProduct = async (id: string) => {
-    if (!window.confirm('Delete this product?')) return;
+  if (!window.confirm('Delete this product?')) return;
 
-    const { error } = await supabase
-      .from('seller_products')
-      .delete()
-      .eq('id', id)
-      .eq('seller_id', userId!);
+  // Instead of .delete(), use .update() to soft-delete:
+  const { error } = await supabase
+    .from('seller_products')
+    .update({ active: false }) // or is_deleted: true
+    .eq('id', id)
+    .eq('seller_id', userId!);
 
-    if (error) {
-      console.error(error);
-      return alert(`Delete failed: ${error.message}`);
-    }
+  if (error) {
+    // if the error is still about FK, show a message anyway:
+    alert("Cannot delete: This product has orders and cannot be removed.");
+    return;
+  }
 
-    setProducts(prev => prev.filter((p) => p.id !== id));
-  };
+  setProducts(prev => prev.filter((p) => p.id !== id));
+};
+
 
   const filteredProducts = useMemo(() => {
     const lower = searchQuery.toLowerCase();

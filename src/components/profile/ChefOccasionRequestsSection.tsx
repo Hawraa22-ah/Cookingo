@@ -1,7 +1,7 @@
-// // src/components/profile/ChefOccasionRequestsSection.tsx
+
 // import React, { useEffect, useState } from 'react'
-// import { supabase }        from '../../lib/supabase'
-// import { useAuth }         from '../../contexts/AuthContext'
+// import { supabase } from '../../lib/supabase'
+// import { useAuth } from '../../contexts/AuthContext'
 
 // type OccRequest = {
 //   id: number
@@ -11,7 +11,7 @@
 //   food_type: string
 //   event_date: string
 //   quantity: number
-//   location: string
+//   location: string  // stored as "lat,lng" or address text
 //   status: 'pending' | 'in_progress' | 'delivered'
 //   created_at: string
 // }
@@ -23,12 +23,35 @@
 //   dish_name: string
 //   quantity: number
 //   delivery_date: string
-//   location: string
-  
+//   delivery_time?: string         // <---- Add this
+//   latitude: number | null
+//   longitude: number | null
 //   status: 'pending' | 'in_progress' | 'delivered'
 // }
 
 // type NotificationItem = OccRequest | DishOrder
+
+// // Helper: convert "lat,lng" string to link, or fallback to text
+// function renderLocationLink(location: string) {
+//   // Check if location matches lat,lng pattern
+//   const match = location.match(/^(-?\d+(\.\d+)?),\s*(-?\d+(\.\d+)?)$/)
+//   if (match) {
+//     const lat = match[1]
+//     const lng = match[3]
+//     return (
+//       <a
+//         href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
+//         target="_blank"
+//         rel="noopener noreferrer"
+//         className="text-blue-600 underline"
+//       >
+//         {lat}, {lng}
+//       </a>
+//     )
+//   }
+//   // fallback to plain text
+//   return location || "N/A"
+// }
 
 // export default function ChefOccasionRequestsSection() {
 //   const { user } = useAuth()
@@ -74,7 +97,8 @@
 //         dish_id,
 //         quantity,
 //         delivery_date,
-//         location,
+//         latitude,
+//         longitude,
 //         status,
 //         dish: dishes(id, name, chef_id)
 //       `)
@@ -95,7 +119,9 @@
 //           dish_name:      o.dish.name,
 //           quantity:       o.quantity,
 //           delivery_date:  o.delivery_date,
-//           location:       o.location,
+//           delivery_time:  o.delivery_time, // <--- Add this
+//           latitude:       o.latitude,
+//           longitude:      o.longitude,
 //           status:         o.status as DishOrder['status']
 //         }))
 
@@ -144,14 +170,30 @@
 //                 <div><strong>Food:</strong> {item.food_type}</div>
 //                 <div><strong>Date:</strong> {new Date(item.event_date).toLocaleDateString()}</div>
 //                 <div><strong>Qty:</strong> {item.quantity}</div>
-//                 <div><strong>Location:</strong> {item.location}</div>
+//                 <div>
+//                   <strong>Location:</strong> {renderLocationLink(item.location)}
+//                 </div>
 //               </>
 //             ) : (
 //               <>
 //                 <div><strong>Dish:</strong> {item.dish_name}</div>
 //                 <div><strong>Delivery:</strong> {new Date(item.delivery_date).toLocaleDateString()}</div>
 //                 <div><strong>Qty:</strong> {item.quantity}</div>
-//                 <div><strong>Location:</strong> {item.location}</div>
+//                 <div>
+//                   <strong>Location:</strong>{' '}
+//                   {item.latitude && item.longitude
+//                     ? (
+//                         <a
+//                           href={`https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`}
+//                           target="_blank"
+//                           rel="noopener noreferrer"
+//                           className="text-blue-600 underline"
+//                         >
+//                           {item.latitude}, {item.longitude}
+//                         </a>
+//                       )
+//                     : 'N/A'}
+//                 </div>
 //               </>
 //             )}
 //           </div>
@@ -213,6 +255,7 @@ type DishOrder = {
   dish_name: string
   quantity: number
   delivery_date: string
+  delivery_time?: string         // <---- Include this
   latitude: number | null
   longitude: number | null
   status: 'pending' | 'in_progress' | 'delivered'
@@ -278,7 +321,7 @@ export default function ChefOccasionRequestsSection() {
       .select('*')
       .order('created_at', { ascending: false })
 
-    // 2) load daily dish orders for this chef
+    // 2) load daily dish orders for this chef (now including delivery_time)
     const dishQ = supabase
       .from('daily_dish_orders')
       .select(`
@@ -286,6 +329,7 @@ export default function ChefOccasionRequestsSection() {
         dish_id,
         quantity,
         delivery_date,
+        delivery_time,
         latitude,
         longitude,
         status,
@@ -308,6 +352,7 @@ export default function ChefOccasionRequestsSection() {
           dish_name:      o.dish.name,
           quantity:       o.quantity,
           delivery_date:  o.delivery_date,
+          delivery_time:  o.delivery_time, // <--- Include this
           latitude:       o.latitude,
           longitude:      o.longitude,
           status:         o.status as DishOrder['status']
@@ -365,7 +410,13 @@ export default function ChefOccasionRequestsSection() {
             ) : (
               <>
                 <div><strong>Dish:</strong> {item.dish_name}</div>
-                <div><strong>Delivery:</strong> {new Date(item.delivery_date).toLocaleDateString()}</div>
+                <div>
+                  <strong>Delivery:</strong>{' '}
+                  {new Date(item.delivery_date).toLocaleDateString()}
+                  {item.delivery_time && (
+                    <span> at {item.delivery_time}</span>
+                  )}
+                </div>
                 <div><strong>Qty:</strong> {item.quantity}</div>
                 <div>
                   <strong>Location:</strong>{' '}

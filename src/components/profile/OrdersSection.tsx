@@ -364,10 +364,20 @@ const OrdersSection: React.FC = () => {
               <div className="flex items-center text-sm text-gray-600">
                 <MapPin className="w-4 h-4 mr-2" />
                 <span>{order.address}</span>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${order.latitude},${order.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                   View on Map
+                </a> 
               </div>
 
-              <div className="text-xs text-gray-500">
-                Lat: {order.latitude.toFixed(4)}, Lng: {order.longitude.toFixed(4)}{' '}
+              {/* <div className="text-xs text-gray-500">
+                <MapPin className="w-4 h-4 mr-2" />
+
+                <span> Lat: {order.latitude.toFixed(4)}, Lng: {order.longitude.toFixed(4)}{' '}
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${order.latitude},${order.longitude}`}
                   target="_blank"
@@ -375,12 +385,12 @@ const OrdersSection: React.FC = () => {
                   className="underline"
                 >
                   View on Map
-                </a>
-              </div>
+                </a> </span>
+              </div> */}
 
-              {order.location && (
+              {/* {order.location && (
                 <p className="italic text-gray-500">Note: {order.location}</p>
-              )}
+              )} */}
             </div>
           </div>
         </div>
