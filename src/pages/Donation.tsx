@@ -618,7 +618,7 @@ const Donation: React.FC = () => {
 
       {/* Impact Updates */}
       <div className="mt-12">
-        <h2 className="text-2xl font-bold mb-4">Impact Updates</h2>
+        <h2 className="text-2xl font-bold mb-4">Helping Hands, Full Hearts </h2>
         <div className="overflow-x-auto flex space-x-4 py-2">
           {updates.map(u => (
             <div key={u.id} className="min-w-[200px] bg-white rounded-lg shadow-md">

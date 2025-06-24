@@ -215,7 +215,7 @@ const RecipesPage: React.FC = () => {
           >
             <option value="All">Type</option>
             <option value="Vegetarian">Vegetarian</option>
-            <option value="Chicken">Chicken</option>
+            <option value="Chicken">Chicken/Meat</option>
             <option value="Fish">Fish</option>
           </select>
 

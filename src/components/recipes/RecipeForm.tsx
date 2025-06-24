@@ -202,7 +202,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initialData, onSubmit, onCancel
         >
           <option value="">Select Type</option>
           <option value="Vegetarian">Vegetarian</option>
-          <option value="Chicken">Chicken</option>
+          <option value="Chicken">Chicken/Meat</option>
           <option value="Fish">Fish</option>
         </select>
 

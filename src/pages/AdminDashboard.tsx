@@ -357,8 +357,8 @@ const AdminDashboard = () => {
           { label: 'Total Chefs', val: totalChefs, color: 'text-purple-600' },
           { label: 'Total Sellers', val: totalSellers, color: 'text-green-600' },
           { label: 'Total Admins', val: totalAdmins, color: 'text-red-600' },
-          { label: 'Total Donations', val: totalDonations, color: 'text-orange-600' },
-          { label: 'Total Occasions', val: totalOccasions, color: 'text-pink-600' },
+          // { label: 'Total Donations', val: totalDonations, color: 'text-orange-600' },
+          // { label: 'Total Occasions', val: totalOccasions, color: 'text-pink-600' },
         ].map(c => (
           <div key={c.label} className="bg-white shadow rounded-lg p-4">
             <h2 className="text-sm font-semibold text-gray-500">{c.label}</h2>
@@ -367,52 +367,7 @@ const AdminDashboard = () => {
         ))}
       </div>
 
-      {/* New User Signups + Top Users Section */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mt-12">
-        {/* Top by Orders */}
-        <div className="bg-white p-6 shadow rounded-lg col-span-1">
-          <h3 className="text-lg font-semibold mb-4">Top 5 Users by Orders</h3>
-          <table className="w-full text-left border">
-            <thead>
-              <tr><th>#</th><th>Username</th><th>Orders</th></tr>
-            </thead>
-            <tbody>
-              {topUsersByOrders.map((u, idx) => (
-                <tr key={u.id}><td>{idx + 1}</td><td>{u.username}</td><td>{u.count}</td></tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {/* Top by Ordered Dishes */}
-        <div className="bg-white p-6 shadow rounded-lg col-span-1">
-          <h3 className="text-lg font-semibold mb-4">Top 5 Users by Ordered Dishes</h3>
-          <table className="w-full text-left border">
-            <thead>
-              <tr><th>#</th><th>Username</th><th>Dishes</th></tr>
-            </thead>
-            <tbody>
-              {topUsersByDishes.map((u, idx) => (
-                <tr key={u.id}><td>{idx + 1}</td><td>{u.username}</td><td>{u.count}</td></tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {/* Top by Ordered Occasions */}
-        <div className="bg-white p-6 shadow rounded-lg col-span-1">
-          <h3 className="text-lg font-semibold mb-4">Top 5 by Ordered Occasions</h3>
-          <table className="w-full text-left border">
-            <thead>
-              <tr><th>#</th><th>Username</th><th>Occasions</th></tr>
-            </thead>
-            <tbody>
-              {topUsersByOccasions.map((u, idx) => (
-                <tr key={u.id}><td>{idx + 1}</td><td>{u.username}</td><td>{u.count}</td></tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {/* Signups (lonely) */}
-        <div className="bg-white p-6 shadow rounded-lg col-span-1">
+      <div className="bg-white p-6 shadow rounded-lg col-span-1">
           <h3 className="text-lg font-semibold mb-4">New User Signups (Last 30 Days)</h3>
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={signupStats}>
@@ -425,7 +380,6 @@ const AdminDashboard = () => {
             </LineChart>
           </ResponsiveContainer>
         </div>
-      </div>
 
       {/* Top Chef and Seller */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
@@ -473,11 +427,62 @@ const AdminDashboard = () => {
 </div>
 
 
+      {/* Top Users Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+        {/* Top by Orders */}
+        <div className="bg-white p-6 shadow rounded-lg col-span-1">
+          <h3 className="text-3xl font-bold mb-4">Top 5 Users by Orders</h3>
+          <table className="w-full text-left border">
+            <thead>
+              <tr><th>#</th><th>Username</th><th>Orders</th></tr>
+            </thead>
+            <tbody>
+              {topUsersByOrders.map((u, idx) => (
+                <tr key={u.id}><td>{idx + 1}</td><td>{u.username}</td><td>{u.count}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {/* Top by Ordered Dishes */}
+        <div className="bg-white p-6 shadow rounded-lg col-span-1">
+          <h3 className="text-3xl font-semibold mb-4">Top 5 Users by Ordered Dishes</h3>
+          <table className="w-full text-left border">
+            <thead>
+              <tr><th>#</th><th>Username</th><th>Dishes</th></tr>
+            </thead>
+            <tbody>
+              {topUsersByDishes.map((u, idx) => (
+                <tr key={u.id}><td>{idx + 1}</td><td>{u.username}</td><td>{u.count}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {/* Top by Ordered Occasions */}
+        <div className="bg-white p-6 shadow rounded-lg col-span-1">
+          <h3 className="text-3xl font-semibold mb-4">Top 5 by Ordered Occasions</h3>
+          <table className="w-full text-left border">
+            <thead>
+              <tr><th>#</th><th>Username</th><th>Occasions</th></tr>
+            </thead>
+            <tbody>
+              {topUsersByOccasions.map((u, idx) => (
+                <tr key={u.id}><td>{idx + 1}</td><td>{u.username}</td><td>{u.count}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {/* Signups (lonely) */}
+        
+      </div>
+
+      
+
+
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
         {/* Donations */}
         <div className="bg-white p-6 shadow rounded-lg">
-          <h3 className="text-lg font-semibold mb-4">Donations by Beneficiary</h3>
+          <h3 className="text-3xl font-semibold mb-4">Donations by Beneficiary</h3>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
@@ -500,7 +505,7 @@ const AdminDashboard = () => {
         </div>
         {/* Occasions by Type */}
         <div className="bg-white p-6 shadow rounded-lg">
-          <h3 className="text-lg font-semibold mb-4">Occasions by Type</h3>
+          <h3 className="text-3xl font-semibold mb-4">Occasions by Type</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={occasionTypes}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -515,7 +520,7 @@ const AdminDashboard = () => {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-          {mostSubmittedByCategory.length > 0 && (
+          {/* {mostSubmittedByCategory.length > 0 && (
             <div className="mt-4 text-base text-center font-bold text-orange-600">
               {mostSubmittedByCategory.map(({ type, name, count }) => (
                 <div key={type}>
@@ -523,14 +528,14 @@ const AdminDashboard = () => {
                 </div>
               ))}
             </div>
-          )}
+          )} */}
         </div>
       </div>
 
       {/* Ordered Products & Favorite Recipes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
         <div className="bg-white p-6 shadow rounded-lg h-full flex flex-col">
-          <h3 className="text-lg font-semibold mb-4">Order Products (Times Ordered)</h3>
+          <h3 className="text-3xl font-semibold mb-4">Order Products (Times Ordered)</h3>
           <div className="flex-1">
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={orderedProductsStats}>
@@ -549,7 +554,7 @@ const AdminDashboard = () => {
           </div>
         </div>
         <div className="bg-white p-6 shadow rounded-lg h-full flex flex-col">
-          <h3 className="text-lg font-semibold mb-4">Favorite Recipes</h3>
+          <h3 className="text-3xl font-semibold mb-4">Favorite Recipes</h3>
           <div className="flex-1">
             <ResponsiveContainer width="100%" height={250}>
               <ScatterChart>

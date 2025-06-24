@@ -24,7 +24,9 @@ export default function ProductsPage() {
           id,
           username
         )
-      `);
+      `)
+          .eq('active', true);   // <--- only show active products!
+
     if (error) {
       console.error('Error fetching products:', error.message);
       toast.error('Failed to load products');
