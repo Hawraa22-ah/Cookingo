@@ -30,7 +30,6 @@ const RecipeInteractions: React.FC<RecipeInteractionsProps> = ({ recipeId }) => 
 
   const loadInteractions = async (userId: string) => {
     try {
-      // ← use your real table name
       const { data: favData } = await supabase
         .from('favorite_recipes')
         .select('*')

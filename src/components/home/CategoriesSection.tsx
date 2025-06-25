@@ -8,14 +8,14 @@ const categories = [
     description: 'Start your day right'
   },
   {
-    name: 'Italian',
+    name: 'Vitamins',
     image: 'https://images.pexels.com/photos/1527603/pexels-photo-1527603.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    description: 'Pizza, pasta and more'
+    // description: 'Pizza, pasta and more'
   },
   {
-    name: 'Desserts',
+    name: 'Calories',
     image: 'https://images.pexels.com/photos/291528/pexels-photo-291528.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    description: 'Sweet treats for everyone'
+    // description: 'Sweet treats for everyone'
   },
   {
     name: 'Vegetarian',

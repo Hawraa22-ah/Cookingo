@@ -22,7 +22,7 @@ import Donation from './pages/Donation';
 import OccasionsPage from './pages/OccasionsPage';
 import AnnouncementsPage from './pages/AnnouncementsPage';
 import ChefOccasionRequestsSection from './components/profile/ChefOccasionRequestsSection';
-import CartSection from './components/cart/CartSection'; // Adjust the path accordingly
+import CartSection from './components/cart/CartSection'; 
 import SellerNotificationsSection from './components/profile/SellerNotificationsSection';
 
 function ChatWidgetLoader() {
@@ -30,7 +30,7 @@ function ChatWidgetLoader() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!user) return;                // ← only load script if logged in
+    if (!user) return;                
     if (document.querySelector('script[data-df]')) {
       setReady(true);
       return;
@@ -86,8 +86,6 @@ function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
-
-        {/* Only logged-in users get the chat widget */}
         <ChatWidgetLoader />
       </AuthProvider>
     </Router>

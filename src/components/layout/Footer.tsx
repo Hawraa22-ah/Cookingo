@@ -67,7 +67,7 @@ const Footer: React.FC = () => {
                 <Link to="/recipes?tag=Dinner" className="text-gray-300 hover:text-orange-400 transition-colors">Dinner</Link>
               </li>
               <li>
-                <Link to="/recipes?tag=Dessert" className="text-gray-300 hover:text-orange-400 transition-colors">Desserts</Link>
+                <Link to="/recipes?tag=Dessert" className="text-gray-300 hover:text-orange-400 transition-colors">Low calories</Link>
               </li>
               <li>
                 <Link to="/recipes?tag=Vegetarian" className="text-gray-300 hover:text-orange-400 transition-colors">Vegetarian</Link>

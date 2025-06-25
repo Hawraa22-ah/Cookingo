@@ -337,12 +337,51 @@ const AdminDashboard = () => {
   };
 
   // Dummy delete handlers (add your logic as needed)
-  const deleteRecipe = (id, title) => {
-    alert(`Delete recipe "${title}" (id: ${id})`);
-  };
-  const deleteProduct = (id, name) => {
-    alert(`Delete product "${name}" (id: ${id})`);
-  };
+  // const deleteRecipe = (id, title) => {
+  //   alert(`Delete recipe "${title}" (id: ${id})`);
+  // };
+  // const deleteProduct = (id, name) => {
+  //   alert(`Delete product "${name}" (id: ${id})`);
+  // };
+//   const deleteRecipe = async (id, title) => {
+//   if (!window.confirm(`Delete recipe "${title}"?`)) return;
+//   const { error } = await supabase.from('recipes').delete().eq('id', id);
+//   if (error) {
+//     alert('Failed to delete recipe.');
+//     return;
+//   }
+//   setLowRatedRecipes(recipes => recipes.filter(r => r.id !== id));
+// };
+const deleteRecipe = async (id, title) => {
+  if (!window.confirm(`Delete recipe "${title}"?`)) return;
+
+  // Manually delete referencing rows
+  await supabase.from('favorite_recipes').delete().eq('recipe_id', id);
+  await supabase.from('recipe_comments').delete().eq('recipe_id', id);
+  await supabase.from('recipe_ratings').delete().eq('recipe_id', id);
+  await supabase.from('comments').delete().eq('recipe_id', id);
+  // Add more as needed if you have more referencing tables
+
+  // Now, delete the recipe itself
+  const { error } = await supabase.from('recipes').delete().eq('id', id);
+  if (error) {
+    alert('Failed to delete recipe.');
+    return;
+  }
+  setLowRatedRecipes(recipes => recipes.filter(r => r.id !== id));
+};
+
+
+const deleteProduct = async (id, name) => {
+  if (!window.confirm(`Delete product "${name}"?`)) return;
+  const { error } = await supabase.from('seller_products').delete().eq('id', id);
+  if (error) {
+    alert('Failed to delete product.');
+    return;
+  }
+  setHighPriceProducts(products => products.filter(p => p.id !== id));
+};
+
 
   return (
     <div className="p-6">
