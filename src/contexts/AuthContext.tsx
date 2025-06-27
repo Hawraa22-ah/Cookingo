@@ -1,11 +1,14 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
 
+// ADDED: Add role to interface!
 interface AuthContextType {
   user: User | null;
+  role: string | undefined;     // <-- Added role
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (
@@ -29,10 +32,11 @@ export const useAuth = () => {
   return context;
 };
 
-const publicPaths = ['/', '/recipes', '/daily-dish', '/login', '/register', '/products', '/occasions', '/donation'];
+const publicPaths = ['/', '/recipes', '/daily-dish', '/login', '/register', '/products', '/occasions', '/donation', '/learn'];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [role, setRole] = useState<string | undefined>(undefined); // <-- Added role state
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,6 +62,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       navigate('/login');
     }
   }, [loading, user, location.pathname, navigate]);
+
+  // ADDED: Fetch user role whenever the user changes
+  useEffect(() => {
+    if (!user) {
+      setRole(undefined);
+      return;
+    }
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+      .then(({ data, error }) => {
+        if (error) {
+          setRole(undefined);
+        } else {
+          setRole(data?.role);
+        }
+      });
+  }, [user]);
 
   const handleAuthError = async (error: any) => {
     if (
@@ -172,6 +196,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       setUser(null);
+      setRole(undefined); // ADDED: clear role on sign out
       navigate('/login');
       toast.success('Signed out successfully');
     } catch (error) {
@@ -180,7 +205,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const value = { user, loading, signIn, signUp, signOut, handleAuthError };
+  // ADDED: Provide role in context!
+  const value: AuthContextType & { role: string | undefined } = {
+    user,
+    role,
+    loading,
+    signIn,
+    signUp,
+    signOut,
+    handleAuthError,
+  };
 
   return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
 };

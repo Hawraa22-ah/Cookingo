@@ -8,7 +8,8 @@ import {
 import { Bell as BellIcon } from 'lucide-react';
 
 const HIGH_PRICE_LIMIT = 100;
-const COLORS = ['#f97316', '#8B5E3C', '#FFA500', '#d97706'];
+// const COLORS = ['#f97316', '#8B5E3C', '#FFA500', '#d97706'];
+const COLORS = ['#46d89c', '#ffe9b6', '#f97316', '#d97706'];
 
 const BENEFICIARY_LABELS = {
   street: 'Poor people on the street',

@@ -71,8 +71,10 @@ const Header: React.FC = () => {
             <Link to="/recipes" className={linkClass('/recipes')}>Recipes</Link>
             <Link to="/daily-dish" className={linkClass('/daily-dish')}>Daily Dishes</Link>
             <Link to="/occasions" className={linkClass('/occasions')}>Occasions</Link>
+            <Link to="/learn" className={linkClass('/learn')}>Learn</Link>
             <Link to="/products" className={linkClass('/products')}>Products</Link>
             <Link to="/donation" className={linkClass('/donation')}>Donation</Link>
+
             {/* {isChef && (
               <Link to="/chef/dashboard" className={linkClass('/chef/dashboard')}>Chef Dashboard</Link>
             )} */}
@@ -98,6 +100,7 @@ const Header: React.FC = () => {
             <Link to="/recipes" className={linkClass('/recipes')}>Recipes</Link>
             <Link to="/daily-dish" className={linkClass('/daily-dish')}>Daily Dishes</Link>
             <Link to="/occasions" className={linkClass('/occasions')}>Occasions</Link>
+            <Link to="/learn" className={linkClass('/learn')}>Learn</Link> {/* ← NEW */}
             <Link to="/products" className={linkClass('/products')}>Products</Link>
             <Link to="/donation" className={linkClass('/donation')}>Donation</Link>
             {isChef && (

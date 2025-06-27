@@ -32,5 +32,5 @@
   },
 
   // Include everything in src (including your global.d.ts for df-messenger)
-  "include": ["src"]
+  "include": ["src", "server.js"]
 }
